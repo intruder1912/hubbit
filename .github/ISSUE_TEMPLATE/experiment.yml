@@ -1,0 +1,21 @@
+name: Experiment
+description: A new experiment or kids mission
+labels: [experiment]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What do we want to try or learn?
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware / model
+      description: Which model build, which ports (motors, sensor)?
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How do we know it works?

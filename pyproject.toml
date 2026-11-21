@@ -1,0 +1,41 @@
+[project]
+name = "lego-boost"
+version = "0.1.0"
+description = "Experiments with LEGO BOOST (Move Hub 88006) from Python via pylgbst - no LEGO app needed."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "pylgbst[bleak]",
+]
+
+[project.scripts]
+boost-scan = "lego_boost.scan:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lego_boost"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv.sources]
+# PyPI 1.3.0 (2023) calls bleak.discover(), which bleak >= 1.0 removed.
+# Master has the BleakScanner fix (#140, 2025-01-04) but no release yet.
+pylgbst = { git = "https://github.com/undera/pylgbst", rev = "71dfc630b54ba3a966e4b7a144344465a65dc138" }
