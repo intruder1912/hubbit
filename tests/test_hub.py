@@ -55,3 +55,32 @@ def test_safe_shutdown_does_not_hang(monkeypatch):
     hub_mod.safe_shutdown(fake, timeout=0.2)
     assert time.monotonic() - start < 2
     assert fake.connection.closed
+
+
+def test_patch_pylgbst_find_device_accepts_service_uuids(monkeypatch):
+    import asyncio
+
+    from pylgbst.comms.cbleak import BleakConnection
+
+    calls = []
+
+    async def fake_find_device(self, hub_mac=None, hub_name=None):
+        calls.append((hub_mac, hub_name))
+        return "DEVICE"
+
+    monkeypatch.setattr(BleakConnection, "find_device", fake_find_device)
+    hub_mod.patch_pylgbst()
+    hub_mod.patch_pylgbst()  # idempotent: must not wrap twice
+
+    result = asyncio.run(BleakConnection.find_device(None, "AA", "Move Hub", service_uuids=["x"]))
+    assert result == "DEVICE"
+    assert calls == [("AA", "Move Hub")]
+
+
+def test_patch_pylgbst_hub_action_ignores_other_messages():
+    from pylgbst.messages import MsgHubAction, MsgPortValueSingle
+
+    hub_mod.patch_pylgbst()
+    request = MsgHubAction(MsgHubAction.DISCONNECT)
+    assert not request.is_reply(MsgPortValueSingle.__new__(MsgPortValueSingle))
+    assert request.is_reply(MsgHubAction(MsgHubAction.UPSTREAM_DISCONNECT))

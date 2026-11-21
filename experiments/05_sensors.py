@@ -7,7 +7,7 @@ Hardware: color & distance sensor in port C or D (optional). Nothing moves.
 
 import time
 
-from pylgbst.peripherals import COLORS
+from pylgbst.peripherals import COLORS, TiltSensor
 
 from lego_boost import boost
 
@@ -19,7 +19,7 @@ with boost() as hub:
         print(f"vision: color={COLORS.get(color, color)} distance={distance}")
 
     def on_tilt(state):
-        print(f"tilt:   {state}")
+        print(f"tilt:   {TiltSensor.TRI_STATES.get(state, state)}")
 
     def on_button(pressed):
         print(f"button: {'pressed' if pressed else 'released'}")

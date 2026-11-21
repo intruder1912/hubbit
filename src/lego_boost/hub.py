@@ -42,11 +42,48 @@ def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
     return found.address
 
 
+def patch_pylgbst() -> None:
+    """Work around two pylgbst bugs at the pinned commit (71dfc63). Idempotent.
+
+    1. On macOS 12+ pylgbst calls `BleakConnection.find_device(..., service_uuids=[...])`,
+       but `find_device` accepts no extra kwargs -> TypeError kills the comms thread and
+       every connect fails with "communication threads not functioning". Our own scan
+       finds the hub without the service filter, so the extra kwargs are dropped.
+       Harmless on Linux/Windows (they never pass the kwarg).
+    2. `MsgHubAction.is_reply` raises TypeError for any other upstream message instead of
+       returning False. A sensor value arriving while `hub.disconnect()` waits for its
+       reply kills pylgbst's processing thread.
+    """
+    from pylgbst.comms.cbleak import BleakConnection
+    from pylgbst.messages import MsgHubAction
+
+    original_find = BleakConnection.find_device
+    if not getattr(original_find, "_lego_boost_patched", False):
+
+        async def find_device(self, hub_mac=None, hub_name=None, **_ignored):
+            return await original_find(self, hub_mac, hub_name)
+
+        find_device._lego_boost_patched = True
+        BleakConnection.find_device = find_device
+
+    original_is_reply = MsgHubAction.is_reply
+    if not getattr(original_is_reply, "_lego_boost_patched", False):
+
+        def is_reply(self, msg):
+            if not isinstance(msg, MsgHubAction):
+                return False
+            return original_is_reply(self, msg)
+
+        is_reply._lego_boost_patched = True
+        MsgHubAction.is_reply = is_reply
+
+
 def connect(address: str | None = None, timeout: float = 15.0):
     """Return a connected pylgbst MoveHub. Prefer the `boost()` context manager."""
     from pylgbst import get_connection_bleak
     from pylgbst.hub import MoveHub
 
+    patch_pylgbst()
     addr = resolve_address(address, timeout)
     log.info("Connecting to %s", addr)
     conn = get_connection_bleak(hub_mac=addr, hub_name=MOVE_HUB_NAME)
