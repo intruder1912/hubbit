@@ -3,7 +3,8 @@
 # How to run:   uv run kids/03_drive_square.py
 # Careful:      put the robot on the floor with lots of space.
 # Try this:     can you drive a triangle? Or a zig-zag?
-#               (turn_left takes a number of seconds - try 0.4 or 0.7)
+#               (turn_right() is a quarter turn. turn_right(0.2) turns less,
+#               turn_right(0.7) turns about half way round.)
 
 from lego_boost.kid import Robot
 
@@ -13,4 +14,4 @@ with Robot() as robot:
         robot.light("blue")
         robot.forward(1)
         robot.light("yellow")
-        robot.turn_right(0.5)
+        robot.turn_right()

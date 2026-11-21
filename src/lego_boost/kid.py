@@ -34,7 +34,11 @@ COLORS = {
 }
 COLOR_NAMES = {0x00: "black", 0xFF: "nothing"} | {v: k for k, v in COLORS.items() if v != 0x00}
 
-DEFAULT_SPEED = 50
+DEFAULT_SPEED = 35  # driving: ~35 cm per second on the test model (50% felt too fast)
+TURN_SPEED = 50  # turning on the spot
+# Calibrated 2026-11-21 on a hard floor at 50%: 0.35 s ~ 79 deg, 0.5 s ~ 130 deg
+# (not linear: the motors ramp up first). Interpolated: 0.38 s ~ 90 deg.
+QUARTER_TURN_SECONDS = 0.38
 
 
 def _speed(percent: float) -> float:
@@ -76,10 +80,12 @@ class Robot:
     def backward(self, seconds: float = 1, speed: float = DEFAULT_SPEED) -> None:
         self.hub.motor_AB.timed(seconds, -_speed(speed), -_speed(speed))
 
-    def turn_left(self, seconds: float = 0.5, speed: float = DEFAULT_SPEED) -> None:
+    def turn_left(self, seconds: float = QUARTER_TURN_SECONDS, speed: float = TURN_SPEED) -> None:
+        """Turn on the spot. With no number it is about a quarter turn (90 degrees)."""
         self.hub.motor_AB.timed(seconds, -_speed(speed), _speed(speed))
 
-    def turn_right(self, seconds: float = 0.5, speed: float = DEFAULT_SPEED) -> None:
+    def turn_right(self, seconds: float = QUARTER_TURN_SECONDS, speed: float = TURN_SPEED) -> None:
+        """Turn on the spot. With no number it is about a quarter turn (90 degrees)."""
         self.hub.motor_AB.timed(seconds, _speed(speed), -_speed(speed))
 
     def spin_motor(self, degrees: float = 360, speed: float = DEFAULT_SPEED) -> None:

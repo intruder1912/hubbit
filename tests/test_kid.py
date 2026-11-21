@@ -17,3 +17,26 @@ def test_unknown_color_does_not_crash(capsys):
     robot.hub = object()  # never touched for unknown colors
     robot.light("sparkly")
     assert "don't know" in capsys.readouterr().out
+
+
+class RecordingMotor:
+    def __init__(self):
+        self.calls = []
+
+    def timed(self, *args):
+        self.calls.append(args)
+
+
+def test_default_turn_is_calibrated_quarter_turn():
+    from types import SimpleNamespace
+
+    from lego_boost import kid
+
+    robot = Robot()
+    robot.hub = SimpleNamespace(motor_AB=RecordingMotor())
+    robot.turn_right()
+    robot.turn_left()
+    robot.forward()
+    q, t, d = kid.QUARTER_TURN_SECONDS, kid.TURN_SPEED / 100, kid.DEFAULT_SPEED / 100
+    assert robot.hub.motor_AB.calls == [(q, t, -t), (q, -t, t), (1, d, d)]
+    assert kid.DEFAULT_SPEED <= 50 and kid.TURN_SPEED <= 50  # hardware safety rule

@@ -37,6 +37,16 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   (2026-11-21, experiment 05). Suspected battery contact bounce, unconfirmed. The button
   subscription is still untested (no press happened while connected).
 
+## Kids track calibration (2026-11-21, Mac session, hard floor)
+
+- `Robot` drive speed 35% (50% felt too fast for a child); ~35 cm per `forward(1)`.
+- Turn on the spot at 50%: 0.35 s ≈ 79°, 0.5 s ≈ 130° (not linear, motors ramp up).
+  `QUARTER_TURN_SECONDS = 0.38` → mission 3 drives a closed square. Re-check on carpet
+  or with weak batteries.
+- Each motor call adds ~0.28 s of BLE round trip (`forward(1)` takes ~1.29 s).
+- Colour sensor with non-LEGO items (green, red, neon orange): red ✓, green seen as
+  BLUE/CYAN, orange likely as RED; BLACK appears between items. Retest with LEGO bricks.
+
 ## Platform log
 
 Record what was verified on real hardware.
