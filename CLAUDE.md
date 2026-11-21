@@ -49,6 +49,11 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 
 ## Workflow
 
+**Start every session with the pinned Roadmap issue** (`gh issue view 8`). It has the
+next step, the batch plan with usage estimates/actuals, the cut lines and open decisions.
+At the end of a batch: ask the user for `/usage` numbers, record them in #8, and update
+"Next step" there.
+
 Work is tracked in GitHub issues (`gh issue list`). Reference the issue in commits
 (`Closes #N`). Record hardware findings (what worked on which OS) in `docs/hardware-notes.md`.
 Run `uv run ruff check . && uv run pytest` before committing.
