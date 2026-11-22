@@ -398,11 +398,12 @@ class Session:
     def _run_hold(self, gen: int, w: _Worker) -> None:
         motor = self.robot.hub.motor_AB
         speed, turn = kid._speed(kid.DEFAULT_SPEED), kid._speed(kid.TURN_SPEED)
+        wheels = self.robot.wheels
         speeds = {
-            "forward": (speed, speed),
-            "back": (-speed, -speed),
-            "left": (-turn, turn),
-            "right": (turn, -turn),
+            "forward": wheels(speed, speed),
+            "back": wheels(-speed, -speed),
+            "left": wheels(-turn, turn),
+            "right": wheels(turn, -turn),
         }
         running = None
         try:
@@ -443,14 +444,15 @@ class Session:
         if name == "stop":
             robot.stop()
             return self._t("stopped")
+        ab, wheels = robot.hub.motor_AB, robot.wheels  # raw "motor AB" stays untrimmed
         if name == "forward":
-            self._timed(robot.hub.motor_AB, args[0], speed, speed, gen, w)
+            self._timed(ab, args[0], *wheels(speed, speed), gen, w)
         elif name == "back":
-            self._timed(robot.hub.motor_AB, args[0], -speed, -speed, gen, w)
+            self._timed(ab, args[0], *wheels(-speed, -speed), gen, w)
         elif name == "left":
-            self._timed(robot.hub.motor_AB, kid.turn_seconds(args[0]), -turn, turn, gen, w)
+            self._timed(ab, kid.turn_seconds(args[0]), *wheels(-turn, turn), gen, w)
         elif name == "right":
-            self._timed(robot.hub.motor_AB, kid.turn_seconds(args[0]), turn, -turn, gen, w)
+            self._timed(ab, kid.turn_seconds(args[0]), *wheels(turn, -turn), gen, w)
         elif name == "led":
             robot.light(args[0])
         elif name == "color":

@@ -1,3 +1,5 @@
+import pytest
+
 from lego_boost.kid import COLOR_NAMES, COLORS, Robot, _speed
 
 
@@ -62,3 +64,40 @@ def test_turn_by_degrees_and_hub_helpers():
     robot.hub.connection.is_alive = lambda: False
     assert not robot.is_connected()
     assert Robot().is_connected() is False  # never connected
+
+
+def test_trim_slows_only_one_wheel():
+    from lego_boost.kid import trimmed
+
+    assert trimmed(0.5, 0.5, 0) == (0.5, 0.5)
+    assert trimmed(0.5, 0.5, 10) == (0.45, 0.5)  # left slower: robot drifted right
+    assert trimmed(-0.5, 0.5, -10) == (-0.5, 0.45)  # right slower, sign kept
+
+
+def test_trim_from_env(monkeypatch, capsys):
+    from lego_boost.kid import read_trim
+
+    assert read_trim() == 0
+    monkeypatch.setenv("BOOST_TRIM", "4,5")
+    assert read_trim() == 4.5
+    monkeypatch.setenv("BOOST_TRIM", "-80")
+    assert read_trim() == -30
+    monkeypatch.setenv("BOOST_TRIM", "lots")
+    assert read_trim("de") == 0
+    out = capsys.readouterr().out
+    assert "BOOST_TRIM=-80" in out and "Nehme 0" in out
+
+
+def test_robot_drives_with_trim(monkeypatch):
+    from types import SimpleNamespace
+
+    from lego_boost import kid
+
+    monkeypatch.setenv("BOOST_TRIM", "10")
+    robot = Robot()
+    robot.hub = SimpleNamespace(motor_AB=RecordingMotor())
+    robot.forward(1, speed=40)
+    robot.turn_left(0.5, speed=40)
+    calls = [x for call in robot.hub.motor_AB.calls for x in call]
+    assert calls == pytest.approx([1, 0.36, 0.4, 0.5, -0.36, 0.4])
+    assert kid.Roboter().trim == 10  # German robot reads it too

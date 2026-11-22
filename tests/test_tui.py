@@ -43,6 +43,15 @@ def log_text(app) -> str:
     return "\n".join(strip.text for strip in app.query_one("#log", RichLog).lines)
 
 
+async def log_shows(pilot, app, text: str) -> bool:
+    """True once `text` is in the log (lines arrive a moment after the session connects)."""
+    for _ in range(100):
+        if text in log_text(app):
+            return True
+        await pilot.pause(0.02)
+    return False
+
+
 def motor_moves(lines):
     return [line for line in lines if "motor AB:" in line and "stop" not in line]
 
@@ -169,7 +178,7 @@ def test_german_labels_and_switching():
     async def test(pilot, app, sim):
         assert str(app.query_one("#forward", Button).label) == "^ Vor"
         assert str(app.query_one("#light-green", Button).label) == "gruen"
-        assert "Los geht's!" in log_text(app)
+        assert await log_shows(pilot, app, "Los geht's!")
         app.query_one("#command", Input).value = "language english"
         await pilot.press("enter")
         assert str(app.query_one("#forward", Button).label) == "^ Forward"

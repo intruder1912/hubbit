@@ -194,6 +194,7 @@ MESSAGES = {
         "robot_bye": "Robot stopped. Bye!",
         "robot_unknown_color": "I don't know the color '{color}'. Try one of: {colors}",
         "no_extra_motor": "No extra motor plugged into port C or D.",
+        "bad_trim": "BOOST_TRIM={value} is not a number from -{max} to {max}. Using {used}.",
         "no_sensor": "No color/distance sensor plugged in.",
     },
     DE: {
@@ -269,6 +270,7 @@ MESSAGES = {
         "robot_bye": "Roboter angehalten. Tschuess!",
         "robot_unknown_color": "Die Farbe '{color}' kenne ich nicht. Probier: {colors}",
         "no_extra_motor": "Kein extra Motor an Anschluss C oder D.",
+        "bad_trim": "BOOST_TRIM={value} ist keine Zahl von -{max} bis {max}. Nehme {used}.",
         "no_sensor": "Kein Farb-/Abstandssensor eingesteckt.",
     },
 }
