@@ -98,6 +98,22 @@ Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](
 Security problems: see [SECURITY.md](SECURITY.md).
 More: [docs/workflow.md](docs/workflow.md), [docs/triage.md](docs/triage.md), [CLAUDE.md](CLAUDE.md).
 
+## Acknowledgements
+
+This project stands on the work of others:
+
+- [pylgbst](https://github.com/undera/pylgbst) by Andrey Pokhilko and contributors (MIT): the
+  Python library that talks to the Move Hub. `lego_boost.hub.patch_pylgbst()` works around two
+  bugs in the pinned commit; see [docs/hardware-notes.md](docs/hardware-notes.md).
+- [bleak](https://github.com/hbldh/bleak) by Henrik Blidh and contributors (MIT): cross-platform
+  Bluetooth LE.
+- [prompt_toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) by Jonathan Slenders
+  and contributors (BSD-3-Clause): the interactive `boost-console` prompt.
+- [BOOSTreveng](https://github.com/JorgePe/BOOSTreveng) by Jorge Pereira (MIT) and LEGO's
+  [wireless protocol documentation](https://github.com/LEGO/lego-ble-wireless-protocol-docs):
+  protocol references.
+- The [Contributor Covenant](https://www.contributor-covenant.org) (CC BY 4.0): our Code of Conduct.
+
 ## License
 
 MIT. LEGO® and BOOST are trademarks of the LEGO Group, which does not sponsor or endorse
