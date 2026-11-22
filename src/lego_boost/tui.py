@@ -18,15 +18,16 @@ from __future__ import annotations
 import argparse
 from collections.abc import Callable
 
+from rich.text import Text
 from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Grid, Horizontal, Vertical
+from textual.containers import Grid, Horizontal, VerticalScroll
 from textual.message import Message
-from textual.widgets import Button, Footer, Input, RichLog, Static
+from textual.widgets import Button, Input, RichLog, Static
 
 from lego_boost.console import _connect_hub, status_text
-from lego_boost.i18n import LANGS, color_word, default_lang, t
+from lego_boost.i18n import LANGS, color_word, default_lang, t, tilt_word
 from lego_boost.kid import Robot
 from lego_boost.session import CONNECTED, DISCONNECTED, NOT_OPEN, Session
 
@@ -41,6 +42,50 @@ STEPS = {
 PAD = ("forward", "left", "stop", "right", "back")
 LIGHTS = ("red", "yellow", "green", "blue", "purple", "white", "off")
 LIGHT_CSS = {"purple": "magenta", "off": "black"}
+# Sensor colours (kid.COLOR_NAMES) as terminal colours for the swatch.
+SWATCH = {"black": "black", "pink": "pink1", "purple": "magenta", "blue": "blue",
+          "lightblue": "sky_blue1", "cyan": "cyan", "green": "green", "yellow": "yellow",
+          "orange": "dark_orange", "red": "red", "white": "white"}  # fmt: skip
+DISTANCE_FULL = 10.0  # the sensor's distance reading tops out around 10
+BATTERY_EMPTY, BATTERY_FULL = 6.0, 9.6  # 6 AAA cells
+
+
+def bar(value: float, low: float, high: float, width: int = 10) -> str:
+    """ASCII bar: bar(5, 0, 10) -> "[#####-----]"."""
+    filled = round(width * min(1.0, max(0.0, (value - low) / (high - low))))
+    return "[" + "#" * filled + "-" * (width - filled) + "]"
+
+
+def sensor_text(session: Session) -> Text:
+    """The live sensor panel (refreshed by the session's idle polling)."""
+    lang = session.lang
+    text = Text(t(lang, "tui_sensors") + "\n", style="bold")
+    label = "{:<10}".format
+
+    text.append(label(t(lang, "tui_color")))
+    color = session.last_color
+    if color in SWATCH:
+        text.append("      ", style=f"on {SWATCH[color]}")
+        text.append(" " + color_word(color, lang))
+    else:
+        text.append("-")
+    text.append("\n" + label(t(lang, "tui_distance")))
+    distance = session.last_distance
+    if distance is None:
+        text.append("-")
+    else:
+        text.append(f"{bar(distance, 0, DISTANCE_FULL)} {distance:g}")
+    text.append("\n" + label(t(lang, "tui_tilt")))
+    text.append(tilt_word(session.last_tilt, lang) if session.last_tilt else "-")
+    text.append("\n" + label(t(lang, "tui_battery")))
+    volts = session.last_battery
+    if volts is None:
+        text.append("-")
+    else:
+        low = volts < 7.0
+        style = "bold red" if low else ""
+        text.append(f"{bar(volts, BATTERY_EMPTY, BATTERY_FULL)} {volts:.1f} V", style=style)
+    return text
 
 
 class LogLine(Message):
@@ -68,31 +113,33 @@ class BoostTui(App):
     #status.lost { background: $error; }
     #main { height: 1fr; }
     #controls { width: 46; padding: 0 1; }
-    #pad { grid-size: 3 3; grid-gutter: 0 1; height: 11; }
+    #pad { grid-size: 3 3; grid-gutter: 0 1; height: 9; }
     #pad Button { width: 100%; height: 3; }
     #pad .gap { height: 3; }
     #stop { background: $error; text-style: bold; }
     #lights { grid-size: 4 2; grid-gutter: 0 1; height: 6; }
     #lights Button { min-width: 6; width: 100%; height: 3; }
-    #ask { height: 3; margin-top: 1; }
+    #ask { height: 3; }
     #ask Button { width: 1fr; }
+    #sensors { height: 5; margin-top: 1; padding: 0 1; border-left: tall $primary; }
     #log { width: 1fr; border: round $primary; }
+    #keys { height: 1; padding: 0 1; background: $panel; color: $text-muted; }
     """
     BINDINGS = [
-        Binding("up", "drive('forward')", "drive", priority=True),
+        Binding("up", "drive('forward')", show=False, priority=True),
         Binding("down", "drive('back')", show=False, priority=True),
         Binding("left", "drive('left')", show=False, priority=True),
         Binding("right", "drive('right')", show=False, priority=True),
-        Binding("space", "space", "stop", priority=True),
+        Binding("space", "space", show=False, priority=True),
         Binding("escape", "stop", show=False, priority=True),
-        Binding("f1", "help", "help"),
-        Binding("ctrl+q", "quit", "quit", priority=True),
+        Binding("f1", "help", show=False),
+        Binding("ctrl+q", "quit", show=False, priority=True),
         Binding("ctrl+c", "quit", show=False, priority=True),
     ]
 
     def __init__(self, connect: Callable[[], Robot], lang: str) -> None:
         super().__init__()
-        self.session = Session(connect, self._say, lang=lang)
+        self.session = Session(connect, self._say, lang=lang, poll=0.5)
         self._shown_lang = ""
         self._connecting = False
 
@@ -100,7 +147,7 @@ class BoostTui(App):
     def compose(self) -> ComposeResult:
         yield Static(id="status")
         with Horizontal(id="main"):
-            with Vertical(id="controls"):
+            with VerticalScroll(id="controls"):  # scrolls on very small terminals
                 with Grid(id="pad"):
                     for name in ("gap", "forward", "gap", "left", "stop", "right"):
                         yield self._pad_cell(name)
@@ -115,9 +162,10 @@ class BoostTui(App):
                 with Horizontal(id="ask"):
                     yield Button("", id="ask-color")
                     yield Button("", id="ask-distance")
+                yield Static(id="sensors")
             yield RichLog(id="log", wrap=True, markup=False, min_width=20)
         yield CommandLine(id="command")
-        yield Footer()
+        yield Static(id="keys")  # own key hints: textual's Footer can't switch language
 
     @staticmethod
     def _pad_cell(name: str):
@@ -144,8 +192,10 @@ class BoostTui(App):
         self.query_one("#ask-color", Button).label = t(lang, "tui_ask_color")
         self.query_one("#ask-distance", Button).label = t(lang, "tui_ask_distance")
         self.query_one("#command", Input).placeholder = t(lang, "tui_placeholder")
+        self.query_one("#keys", Static).update(t(lang, "tui_keys"))
 
     def _tick(self) -> None:
+        self.query_one("#sensors", Static).update(sensor_text(self.session))
         status = self.query_one("#status", Static)
         if self.session.state == NOT_OPEN:
             status.update(t(self.session.lang, "connecting"))

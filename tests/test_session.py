@@ -186,3 +186,53 @@ def test_exit_and_close_stop_motors_and_disconnect(make):
     assert session.state == CLOSED
     assert hubs[0].motor_AB.stops >= 1 and hubs[0].closed
     session.close()  # twice is fine
+
+
+class FakeVision:
+    def subscribe(self, callback, *args, **kwargs):
+        callback(kid.COLORS["green"], 4.0)  # pylgbst pushes readings to the callback
+
+
+class FakeTilt:
+    MODE_3AXIS_SIMPLE = 2
+    TRI_STATES = {0: "BACK", 1: "UP"}
+
+    def subscribe(self, callback, mode=None):
+        self.mode = mode
+        callback(1)
+
+
+def test_idle_polling_refreshes_readings_without_blocking_commands():
+    hub = FakeHub()
+    hub.vision_sensor, hub.tilt_sensor = FakeVision(), FakeTilt()
+
+    def connect():
+        robot = Robot()
+        robot.hub = hub
+        return robot
+
+    out = []
+    session = Session(connect, out.append, poll=0.05)
+    session.open()
+    try:
+        deadline = time.monotonic() + 3
+        while session.last_tilt is None and time.monotonic() < deadline:
+            time.sleep(0.02)
+        assert session.last_color == "green"
+        assert session.last_distance == 4.0
+        assert session.last_tilt == "up"
+        assert hub.tilt_sensor.mode == FakeTilt.MODE_3AXIS_SIMPLE
+        assert session.last_battery == 8.12
+        assert out == []  # polling is silent
+        assert not session.busy()  # and never counts as a queued command
+        session.handle("forward 0.1")
+        assert session.wait_idle(2)
+        assert len(hub.motor_AB.calls) == 1
+    finally:
+        session.close(timeout=0.5)
+
+
+def test_no_polling_without_poll(make):
+    session, _, _ = make()
+    time.sleep(0.2)
+    assert session.last_battery is None and session.last_tilt is None
