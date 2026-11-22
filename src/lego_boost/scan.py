@@ -16,6 +16,30 @@ MOVE_HUB_NAME = "LEGO Move Hub"
 MOVE_HUB_SERVICE_UUID = "00001623-1212-efde-1623-785feabcd123"
 
 
+class BluetoothUnavailableError(RuntimeError):
+    """Bluetooth itself does not work (service not running, adapter off, ...).
+
+    `str(err)` is a friendly hint with what to do.
+    """
+
+
+def bluetooth_hint(error: Exception) -> str:
+    """A friendly hint for a Bluetooth error from bleak (by its message, any OS)."""
+    text = str(error)
+    if "dbus-org.bluez" in text or "org.bluez" in text and "ServiceUnknown" in text:
+        return (
+            "The Linux Bluetooth service (BlueZ) is not running. Fix: "
+            "sudo apt install bluez && sudo systemctl enable --now bluetooth "
+            "(see docs/setup-linux.md, step 1)."
+        )
+    if "NotReady" in text or "No Bluetooth adapters" in text or "powered off" in text.lower():
+        return (
+            "Bluetooth is switched off or blocked. Switch it on (Linux: bluetoothctl power on, "
+            "sudo rfkill unblock bluetooth). See docs/troubleshooting.md."
+        )
+    return f"Bluetooth does not work here: {text} - see docs/troubleshooting.md."
+
+
 @dataclass(frozen=True)
 class FoundHub:
     name: str
@@ -51,8 +75,16 @@ async def scan_async(timeout: float = 10.0, first_only: bool = False) -> list[Fo
 
 
 def scan(timeout: float = 10.0, first_only: bool = False) -> list[FoundHub]:
-    """Blocking scan. Returns all Move Hubs seen within `timeout` seconds."""
-    return asyncio.run(scan_async(timeout, first_only))
+    """Blocking scan. Returns all Move Hubs seen within `timeout` seconds.
+
+    Raises BluetoothUnavailableError (with a hint) if Bluetooth itself does not work.
+    """
+    from bleak.exc import BleakError
+
+    try:
+        return asyncio.run(scan_async(timeout, first_only))
+    except BleakError as err:
+        raise BluetoothUnavailableError(bluetooth_hint(err)) from err
 
 
 def find_hub(timeout: float = 15.0) -> FoundHub | None:
@@ -67,7 +99,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     print(f"Scanning {args.timeout:.0f}s ... press the green button on the hub (LED blinks).")
-    hubs = scan(args.timeout)
+    try:
+        hubs = scan(args.timeout)
+    except BluetoothUnavailableError as err:
+        print(err)
+        return 2
     if not hubs:
         print("No Move Hub found. See docs/troubleshooting.md.")
         return 1

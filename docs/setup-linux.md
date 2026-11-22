@@ -19,7 +19,8 @@ bluetoothctl show                      # should list a controller, "Powered: yes
 If `Powered: no`: `bluetoothctl power on`. If blocked: `rfkill list` → `sudo rfkill unblock bluetooth`.
 
 - **Kali:** the Bluetooth service is often disabled by default — `systemctl enable --now`
-  matters. In a VM, pass the USB Bluetooth adapter through to the guest.
+  matters. Without it `boost-scan` reports that BlueZ is not running
+  (`Unit dbus-org.bluez.service not found`). In a VM, pass the USB Bluetooth adapter through to the guest.
 - **Raspberry Pi:** the built-in adapter works (Pi 3B+ / 4 / 5 / Zero 2 W). Prefer 64-bit OS.
 
 ## 2. uv and project
