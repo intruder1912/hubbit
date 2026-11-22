@@ -38,7 +38,10 @@ def lang_from_word(word: str) -> str | None:
 
 
 def default_lang() -> str:
-    """Language from the BOOST_LANG environment variable (e.g. "de"), else English."""
+    """Language from BOOST_LANG (shell or .env, e.g. "de"), else English."""
+    from lego_boost.config import load_env
+
+    load_env()
     value = os.environ.get("BOOST_LANG", "")
     return lang_from_word(value.split("_")[0].split(".")[0]) or EN
 

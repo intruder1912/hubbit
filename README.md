@@ -63,7 +63,10 @@ with Robot() as robot:
     print(robot.see_color())
 ```
 
-Set `BOOST_HUB_ADDRESS` (printed by `boost-scan`) to skip scanning.
+`uv run boost-scan --save` remembers the hub's address in a local `.env` file (see
+`.env.example`; one per computer, not committed), which picks your hub when several are
+around. You still press the green button before each connection: the hub only accepts one
+while it blinks. `BOOST_LANG=de` in `.env` makes German the default.
 
 ## Console: drive the robot by typing
 

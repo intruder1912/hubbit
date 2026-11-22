@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="boost-console",
         description="Drive the LEGO BOOST robot by typing commands. Type 'help' inside.",
     )
-    parser.add_argument("--address", help="hub address (default: $BOOST_HUB_ADDRESS or scan)")
+    parser.add_argument("--address", help="hub address (default: $BOOST_HUB_ADDRESS, .env or scan)")
     parser.add_argument("--simulate", action="store_true", help="practice without a hub")
     parser.add_argument("--no-history", action="store_true", help="don't save typed commands")
     parser.add_argument(

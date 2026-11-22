@@ -14,7 +14,9 @@ Tested: macOS 27 (Apple Silicon). Should work on macOS 12+.
 
 CoreBluetooth hides MAC addresses. `boost-scan` prints a **UUID** that is stable on
 *this* Mac only. Use it as `BOOST_HUB_ADDRESS` here, but not on other machines.
+`.env` is not committed, so saving it there is safe:
 
 ```bash
-export BOOST_HUB_ADDRESS=<uuid-from-boost-scan>
+uv run boost-scan --save                     # writes BOOST_HUB_ADDRESS into .env
+export BOOST_HUB_ADDRESS=<uuid-from-boost-scan>   # or: this shell only (wins over .env)
 ```

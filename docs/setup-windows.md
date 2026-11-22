@@ -27,6 +27,11 @@ recognised by Windows works; no extra dongle needed.
 ## Hub address (optional, saves the scan)
 
 `boost-scan` prints the hub's address (a MAC like `00:16:53:AB:CD:EF` on Windows).
+`uv run boost-scan --save` (or double-clicking `windows\scan.cmd`) remembers it in the
+project's `.env` file, so every script and launcher uses that hub from then on. Press the
+green button before each connection anyway: the hub only connects while it blinks.
+
+Or set it yourself (a variable set like this wins over `.env`):
 
 ```powershell
 $env:BOOST_HUB_ADDRESS = "00:16:53:AB:CD:EF"     # this PowerShell window only

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from lego_boost import hub as hub_mod
+from lego_boost.scan import FoundHub
 
 
 class FakeMotor:
@@ -29,13 +30,21 @@ class FakeHub:
 
 def test_resolve_address_prefers_explicit(monkeypatch):
     monkeypatch.setenv(hub_mod.ENV_ADDRESS, "FROM-ENV")
+    seen = []
+
+    def find_hub(timeout, address=None):
+        seen.append(address)
+        return FoundHub("LEGO Move Hub", address, -40)
+
+    monkeypatch.setattr(hub_mod, "find_hub", find_hub)
     assert hub_mod.resolve_address("EXPLICIT") == "EXPLICIT"
     assert hub_mod.resolve_address() == "FROM-ENV"
+    assert seen == ["EXPLICIT", "FROM-ENV"]  # both waited for with a timeout
 
 
 def test_resolve_address_raises_when_nothing_found(monkeypatch):
     monkeypatch.delenv(hub_mod.ENV_ADDRESS, raising=False)
-    monkeypatch.setattr(hub_mod, "find_hub", lambda timeout: None)
+    monkeypatch.setattr(hub_mod, "find_hub", lambda timeout, address=None: None)
     with pytest.raises(hub_mod.HubNotFoundError):
         hub_mod.resolve_address(timeout=0.1)
 

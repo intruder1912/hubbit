@@ -22,7 +22,7 @@ def test_bluez_not_running_gives_a_hint_instead_of_a_traceback(monkeypatch, caps
 
     scan_mod = importlib.import_module("lego_boost.scan")  # the package exports a scan()
 
-    async def broken(timeout, first_only=False):
+    async def broken(timeout, first_only=False, address=None):
         raise BleakDBusError(
             "org.freedesktop.systemd1.NoSuchUnit", ["Unit dbus-org.bluez.service not found."]
         )
