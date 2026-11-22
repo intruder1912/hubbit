@@ -9,6 +9,7 @@ with [pylgbst](https://github.com/undera/pylgbst), without the LEGO app. Used on
 ```bash
 uv sync                          # create/update .venv (Python 3.12 pinned in .python-version)
 uv run boost-scan                # find hubs, print addresses (needs hub switched on)
+uv run boost-console             # interactive console (--simulate: no hub needed)
 uv run experiments/02_hub_info.py
 uv run kids/01_hello_light.py
 uv run pytest                    # unit tests — no hardware needed
@@ -26,6 +27,8 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
   - `commands.py`: text command parser for the console (aliases, limits, help) — pure logic
   - `session.py`: long-running console session — worker thread, `stop`, watchdog, reconnect.
     **Only the worker thread talks to the hub** (pylgbst allows one pending request).
+  - `console.py`: `boost-console` (prompt_toolkit; plain line mode when stdin is not a TTY)
+  - `sim.py`: pretend hub for `--simulate` and CI smoke tests
 - `experiments/NN_name.py` — numbered adult experiments, one topic each
 - `kids/NN_name.py` — "missions" for a young programmer (see rules below)
 - `tests/` — unit tests with fake hubs; CI runs them on macOS, Ubuntu, Windows

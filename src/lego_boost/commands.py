@@ -115,6 +115,11 @@ BY_NAME = {spec.name: spec for spec in SPECS}
 _ALIASES = {word: spec.name for spec in SPECS for word in (spec.name, *spec.aliases)}
 
 
+def canonical(word: str) -> str | None:
+    """The command name for a word or alias ("fwd" -> "forward"), or None."""
+    return _ALIASES.get(word.lower())
+
+
 def words(mode: str = SIMPLE) -> list[str]:
     """All command words usable in `mode` (for Tab completion)."""
     return sorted(word for word, name in _ALIASES.items() if _usable(BY_NAME[name], mode))
