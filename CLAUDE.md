@@ -22,7 +22,10 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 ## Layout
 
 - `src/lego_boost/` — small helper package
-  - `scan.py`: own BLE scan **with timeout** (pylgbst's discovery blocks forever)
+  - `scan.py`: own BLE scan **with timeout** (pylgbst's discovery blocks forever); a known
+    address is waited for with it too. `boost-scan --save` writes the address into `.env`
+  - `config.py`: per-machine `.env` (BOOST_HUB_ADDRESS, BOOST_LANG; shell variables win).
+    Claude cannot read `.env*` (sandbox/permission deny) - ask the user what is in it
   - `hub.py`: `connect()`, `boost()` context manager, `safe_shutdown()` (stops motors, times out)
   - `kid.py`: `Robot` — simplified API for the kids track (colors by name, speeds in %)
   - `commands.py`: text command parser for the console (aliases, limits, help) — pure logic

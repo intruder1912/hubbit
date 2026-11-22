@@ -3,7 +3,8 @@
 pylgbst's own discovery waits forever if no hub shows up, so we scan
 ourselves first and hand pylgbst an exact address.
 
-Run as a command:  uv run boost-scan  [--timeout SECONDS]
+Run as a command:  uv run boost-scan  [--timeout SECONDS] [--save]
+(`--save` remembers the address in the project's .env, see `lego_boost.config`)
 """
 
 from __future__ import annotations
@@ -53,7 +54,10 @@ def is_move_hub(name: str | None, service_uuids: list[str] | None) -> bool:
     return MOVE_HUB_SERVICE_UUID in uuids or name == MOVE_HUB_NAME
 
 
-async def scan_async(timeout: float = 10.0, first_only: bool = False) -> list[FoundHub]:
+async def scan_async(
+    timeout: float = 10.0, first_only: bool = False, address: str | None = None
+) -> list[FoundHub]:
+    """Scan for Move Hubs; with `address`, only for that one hub."""
     from bleak import BleakScanner
 
     found: dict[str, FoundHub] = {}
@@ -61,6 +65,8 @@ async def scan_async(timeout: float = 10.0, first_only: bool = False) -> list[Fo
 
     def on_detect(device, adv) -> None:
         name = adv.local_name or device.name
+        if address and device.address.lower() != address.lower():
+            return
         if is_move_hub(name, adv.service_uuids):
             found[device.address] = FoundHub(name or "?", device.address, adv.rssi)
             if first_only:
@@ -74,7 +80,9 @@ async def scan_async(timeout: float = 10.0, first_only: bool = False) -> list[Fo
     return list(found.values())
 
 
-def scan(timeout: float = 10.0, first_only: bool = False) -> list[FoundHub]:
+def scan(
+    timeout: float = 10.0, first_only: bool = False, address: str | None = None
+) -> list[FoundHub]:
     """Blocking scan. Returns all Move Hubs seen within `timeout` seconds.
 
     Raises BluetoothUnavailableError (with a hint) if Bluetooth itself does not work.
@@ -82,20 +90,23 @@ def scan(timeout: float = 10.0, first_only: bool = False) -> list[FoundHub]:
     from bleak.exc import BleakError
 
     try:
-        return asyncio.run(scan_async(timeout, first_only))
+        return asyncio.run(scan_async(timeout, first_only, address))
     except BleakError as err:
         raise BluetoothUnavailableError(bluetooth_hint(err)) from err
 
 
-def find_hub(timeout: float = 15.0) -> FoundHub | None:
-    """Return the first Move Hub found, or None after `timeout` seconds."""
-    hubs = scan(timeout, first_only=True)
+def find_hub(timeout: float = 15.0, address: str | None = None) -> FoundHub | None:
+    """Return the first Move Hub found (or the one with `address`), or None after `timeout`."""
+    hubs = scan(timeout, first_only=True, address=address)
     return hubs[0] if hubs else None
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Scan for LEGO BOOST Move Hubs.")
     parser.add_argument("--timeout", type=float, default=10.0, help="seconds to scan")
+    parser.add_argument(
+        "--save", action="store_true", help="remember the hub's address in .env (one hub only)"
+    )
     args = parser.parse_args(argv)
 
     print(f"Scanning {args.timeout:.0f}s ... press the green button on the hub (LED blinks).")
@@ -109,7 +120,17 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     for hub in hubs:
         print(f"  {hub.name}  address={hub.address}  rssi={hub.rssi}")
-    print("\nTip: export BOOST_HUB_ADDRESS=<address> to skip scanning next time.")
+    if not args.save:
+        print("\nTip: 'boost-scan --save' remembers the address in .env for next time.")
+        return 0
+    if len(hubs) > 1:
+        print("\nSeveral hubs found - switch the others off and run 'boost-scan --save' again.")
+        return 1
+    from lego_boost.config import save_value
+    from lego_boost.hub import ENV_ADDRESS
+
+    path = save_value(ENV_ADDRESS, hubs[0].address)
+    print(f"\nSaved {ENV_ADDRESS}={hubs[0].address} in {path}")
     return 0
 
 

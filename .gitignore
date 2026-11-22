@@ -21,4 +21,5 @@ Thumbs.db
 # Local config
 .env
 .env.*
+!.env.example
 .claude/settings.local.json

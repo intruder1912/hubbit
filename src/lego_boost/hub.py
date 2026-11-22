@@ -16,6 +16,7 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+from lego_boost.config import load_env
 from lego_boost.scan import MOVE_HUB_NAME, find_hub
 
 log = logging.getLogger(__name__)
@@ -28,11 +29,23 @@ class HubNotFoundError(RuntimeError):
 
 
 def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
-    """Explicit address > $BOOST_HUB_ADDRESS > BLE scan."""
+    """Explicit address > $BOOST_HUB_ADDRESS (shell or .env) > first hub found by a BLE scan.
+
+    A known address is still waited for with a timed scan: the hub only accepts a
+    connection while it advertises, and pylgbst's own search for it never times out.
+    """
+    load_env()
     address = address or os.environ.get(ENV_ADDRESS)
-    if address:
-        return address
     print("Looking for the Move Hub ... press its green button.")
+    if address:
+        found = find_hub(timeout, address=address)
+        if found is None:
+            raise HubNotFoundError(
+                f"Move Hub {address} not seen within {timeout:.0f}s. Is it switched on "
+                "(blinking LED)? A different hub? Run 'boost-scan --save' to update .env, "
+                f"or unset {ENV_ADDRESS}."
+            )
+        return found.address
     found = find_hub(timeout)
     if found is None:
         raise HubNotFoundError(
