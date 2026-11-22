@@ -114,6 +114,27 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 - Mission 5 (remote control, EN + DE) in the user's own terminal: w/a/s/d/q and the
   unknown-letter reply all as expected; tapped turns (0.3 s, ~60 deg) feel fine for steering.
 
+## Kali Linux (2026-11-22, bare-metal laptop, BlueZ, #3)
+
+- Setup per `docs/setup-linux.md`: `bluez` + `systemctl enable --now bluetooth` + `bluetooth`
+  group + log out/in were all needed. Then `active`, `Powered: yes`, not blocked.
+- `02_hub_info` (all peripherals, 7.42 V / 96 mA), `03_led_colors`, mission 3, console
+  (`forward`, `left 90`, `color`, raw `battery`, Ctrl+C mid-drive) and boost-tui driving +
+  STOP: all fine. Address saved, `BOOST_TRIM=5` (same robot as on the Mac).
+- **Reconnect after switching the hub off:** the first `reconnect` failed in BlueZ
+  (`BleakError: failed to discover services, device disconnected`, full traceback from
+  pylgbst's thread), the second worked (built-in devices took > 10 s:
+  `Got only these devices: (None, ...)`). Now `connect()` retries once by itself and the
+  thread error is one log line.
+- **boost-tui started right after the console:** the link came up half-open and
+  `MoveHub()` waited forever for a reply (no timeout in pylgbst). So `reconnect` was
+  silently ignored ("one connect at a time") and Ctrl+Q hung: asyncio waited for the
+  stuck textual worker thread. Now: setup limited to 25 s (`CONNECT_TIMEOUT`), connects
+  run in daemon threads, `reconnect` during a connect says "Still connecting ...".
+- **Stale vision reading:** at TUI start one `VisionSensor` value from before the mode
+  switch (1 byte `ff`) was decoded with the 4-byte layout → `AssertionError` traceback in
+  the TUI log. Harmless (one reading lost), now dropped quietly by `patch_pylgbst()`.
+
 ## Platform log
 
 Record what was verified on real hardware.
@@ -124,5 +145,6 @@ Record what was verified on real hardware.
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ `boost-scan --save` + saved address, session core timing, `boost-tui` (hold-to-drive, sensor panel, tilt) |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ kids missions 1–5 (EN + DE 3, 4, 5), colour debounce with LEGO bricks |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ hw-2: `BOOST_TRIM`, degree turns (recalibrated), raw mode, German console, stop, reconnect |
-| | Ubuntu / Kali / Raspberry Pi OS | | pending |
+| 2026-11-22 | Kali Linux (bare metal), BlueZ | 3.12 / 3.1.0 | ✅ setup, 02, 03, mission 3, console, TUI; reconnect needed a retry (fixed), TUI hang after quick restart (fixed); retest pending |
+| | Ubuntu / Raspberry Pi OS | | pending |
 | | Windows | | pending |
