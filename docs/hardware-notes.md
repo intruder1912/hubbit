@@ -94,6 +94,13 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 - **Reconnect:** hub switched off → "Lost the hub. Press the green button, then type
   'reconnect'"; `reconnect` after a green-button press → "Connected again!". It printed a
   stray "Robot stopped. Bye!" (now gone) and the 0x46 warning (now filtered).
+- **New turn formula on the hub:** `kids/de/03_quadrat_fahren.py` (German, 4 x `vorwaerts(1)`
+  + `rechts()` = 0.39 s) closes the square to within 3-5 cm and ~5 deg after four turns
+  (so ~89 deg per quarter turn). No 0x46 warning on connect any more. Good enough, no
+  further tuning.
+- **Scan with `service_uuids`** (what upstream fix undera/pylgbst#142 restores on macOS):
+  `BleakScanner(service_uuids=["00001623-1212-efde-1623-785feabcd123"])` found the hub
+  ("Move Hub") within 0.5 s. So the fixed pylgbst works on macOS with the filter.
 
 ## Platform log
 
