@@ -236,3 +236,44 @@ def test_no_polling_without_poll(make):
     session, _, _ = make()
     time.sleep(0.2)
     assert session.last_battery is None and session.last_tilt is None
+
+
+class SpeedMotor(FakeMotor):
+    def start_speed(self, a, b=None):
+        self.calls.append(("start_speed", a, b))
+
+
+def test_hold_keeps_driving_while_repeated_and_stops_after(make):
+    session, hubs, _ = make()
+    hubs[0].motor_AB = motor = SpeedMotor()
+    end = time.monotonic() + 0.8
+    while time.monotonic() < end:
+        session.hold("forward")
+        time.sleep(0.05)
+    assert motor.calls == [("start_speed", 0.35, 0.35)]
+    assert motor.stops == 0
+    assert session.wait_idle(2)
+    assert motor.stops == 1
+    session.hold("left")
+    session.hold("right")  # direction change while driving
+    time.sleep(0.15)
+    session.stop()
+    assert session.wait_idle(2)
+    assert motor.calls[-1] == ("start_speed", 0.5, -0.5)
+    session.hold("sideways")  # unknown direction: ignored
+    assert session.wait_idle(1)
+
+
+def test_tapped_turns_are_short_pulses(make):
+    from lego_boost.session import TAP_TURN_SECONDS
+
+    session, hubs, _ = make()
+    hubs[0].motor_AB = motor = SpeedMotor()
+    session.hold("left")  # one tap
+    time.sleep(0.3)
+    session.hold("left")  # a second, separate tap
+    assert session.wait_idle(3)
+    pulses = [call for call in motor.calls if call[0] == "timed"]
+    assert [call[1] for call in pulses] == [TAP_TURN_SECONDS, TAP_TURN_SECONDS]
+    assert pulses[0][2:4] == (-0.5, 0.5)
+    assert not [call for call in motor.calls if call[0] == "start_speed"]  # never continuous

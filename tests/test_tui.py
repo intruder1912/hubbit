@@ -64,14 +64,55 @@ def test_buttons_drive_and_light():
     assert app.session.state == CLOSED  # closing the window stops and disconnects
 
 
-def test_arrow_keys_step_and_drop_presses_while_busy():
+async def hold_key(pilot, key, seconds, every=0.08):
+    """Like holding a key down: the terminal sends it again every `every` seconds."""
+    loop = asyncio.get_running_loop()
+    end = loop.time() + seconds
+    while loop.time() < end:
+        await pilot.press(key)
+        await pilot.pause(every)
+
+
+def test_held_arrow_drives_smoothly_and_stops_after_release():
     async def test(pilot, app, sim):
-        await pilot.press("up", "up", "up", "up")  # a held key repeats fast
+        await hold_key(pilot, "up", 1.2)
+        assert motor_moves(sim) == ["[sim] motor AB: running at +35% / +35%"]  # one start
+        assert app.session.busy()  # still driving while the key is held
+        await pilot.pause(0.6)  # let go
+        assert not app.session.busy()
+        assert sim[-1] == "[sim] motor AB: stop"
+
+    run(test)
+
+
+def test_tap_drives_briefly_and_turning_changes_direction_while_held():
+    async def test(pilot, app, sim):
+        await pilot.press("up")  # one tap: a short drive
         await idle(pilot, app)
-        assert motor_moves(sim) == ["[sim] motor AB: 0.3 s at +35% / +35%"]
-        await pilot.press("left")
+        assert sim[-1] == "[sim] motor AB: stop"
+        await hold_key(pilot, "up", 0.3)
+        await hold_key(pilot, "left", 0.3)
         await idle(pilot, app)
-        assert motor_moves(sim)[-1].endswith("-50% / +50%")
+        moves = motor_moves(sim)
+        assert moves[-2:] == [
+            "[sim] motor AB: running at +35% / +35%",
+            "[sim] motor AB: running at -50% / +50%",
+        ]
+
+    run(test)
+
+
+def test_stop_while_holding_waits_for_the_key_to_be_let_go():
+    async def test(pilot, app, sim):
+        await hold_key(pilot, "up", 0.4)
+        await pilot.press("space")
+        await hold_key(pilot, "up", 0.6)  # still held after STOP
+        await idle(pilot, app)
+        assert len(motor_moves(sim)) == 1  # no restart while held
+        assert "Stopped." in log_text(app)
+        await pilot.pause(0.5)  # let go ...
+        await hold_key(pilot, "up", 0.2)  # ... and press again: drives
+        assert len(motor_moves(sim)) == 2
 
     run(test)
 

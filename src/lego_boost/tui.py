@@ -6,9 +6,9 @@
 
 Same session core as `boost-console` (`lego_boost.session`): the buttons and keys just
 type commands for you, and the command line at the bottom takes every console command
-(also `raw` mode). Arrow keys drive in short steps; holding a key keeps the robot going,
-letting go stops it within one step (terminals don't report key releases, so a key press
-that arrives while a step is still running is dropped instead of queued).
+(also `raw` mode). Arrow keys drive while they are held: terminals don't report key
+releases, so the robot keeps going while auto-repeats arrive and stops ~0.3 s after the
+last one (`Session.hold`). After STOP, a held arrow must be let go before it drives again.
 
 SAFETY: drives the motors. Space / Escape / the STOP button stop them at once.
 """
@@ -16,6 +16,7 @@ SAFETY: drives the motors. Space / Escape / the STOP button stop them at once.
 from __future__ import annotations
 
 import argparse
+import time
 from collections.abc import Callable
 
 from rich.text import Text
@@ -31,13 +32,9 @@ from lego_boost.i18n import LANGS, color_word, default_lang, t, tilt_word
 from lego_boost.kid import Robot
 from lego_boost.session import CONNECTED, DISCONNECTED, NOT_OPEN, Session
 
-# One arrow-key step: short, so the robot stops soon after the key is let go.
-STEPS = {
-    "forward": "forward 0.3",
-    "back": "back 0.3",
-    "left": "left 20",
-    "right": "right 20",
-}
+# After STOP, a still-held arrow key keeps auto-repeating; it counts as let go (and may
+# drive again) once no arrow press came for this long.
+RELEASE_GAP = 0.35
 # Buttons run the normal console defaults (1 s, quarter turn).
 PAD = ("forward", "left", "stop", "right", "back")
 LIGHTS = ("red", "yellow", "green", "blue", "purple", "white", "off")
@@ -142,6 +139,8 @@ class BoostTui(App):
         self.session = Session(connect, self._say, lang=lang, poll=0.5)
         self._shown_lang = ""
         self._connecting = False
+        self._last_arrow = 0.0
+        self._stop_latched = False
 
     # --- layout -------------------------------------------------------------
     def compose(self) -> ComposeResult:
@@ -214,6 +213,8 @@ class BoostTui(App):
             return
         finally:
             self._connecting = False
+        self._last_arrow = 0.0
+        self._stop_latched = False
         self._say(t(self.session.lang, "tui_banner"))
 
     def _reconnect(self) -> None:
@@ -221,6 +222,8 @@ class BoostTui(App):
             self.session.handle("reconnect")
         finally:
             self._connecting = False
+        self._last_arrow = 0.0
+        self._stop_latched = False
 
     # --- output -------------------------------------------------------------
     def _say(self, text: str) -> None:
@@ -278,14 +281,21 @@ class BoostTui(App):
         return True
 
     def action_drive(self, direction: str) -> None:
-        if self.session.state != CONNECTED or self.session.busy():
-            return  # drop presses while a step runs: no queue that keeps driving
-        self.session.handle(STEPS[direction])
+        """Arrow key (pressed or auto-repeated): drive while it is held, see Session.hold."""
+        now = time.monotonic()
+        gap, self._last_arrow = now - self._last_arrow, now
+        if self._stop_latched:
+            if gap < RELEASE_GAP:
+                return  # the arrow is still held from before STOP: ignore it
+            self._stop_latched = False
+        if self.session.state == CONNECTED:
+            self.session.hold(direction)
 
     def action_space(self) -> None:
         self.action_stop()
 
     def action_stop(self) -> None:
+        self._stop_latched = True  # a held arrow must be let go before it drives again
         if self.session.state == CONNECTED:
             self.session.handle("stop")
 

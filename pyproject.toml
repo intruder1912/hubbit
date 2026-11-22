@@ -38,6 +38,9 @@ select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Skip the per-machine settings files without looking at them: Claude Code's sandbox
+# denies even a stat() on .env*, which otherwise breaks collection.
+addopts = ["--ignore=.env", "--ignore=.env.example"]
 
 [tool.uv.sources]
 # PyPI 1.3.0 (2023) calls bleak.discover(), which bleak >= 1.0 removed.

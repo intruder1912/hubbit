@@ -54,6 +54,26 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 - Colour sensor with non-LEGO items (green, red, neon orange): red ✓, green seen as
   BLUE/CYAN, orange likely as RED; BLACK appears between items. Retest with LEGO bricks.
 
+## Console / TUI session (2026-11-22, Mac, Vernie, hard floor)
+
+- `boost-scan --save` found the hub as **"Move Hub"** (not "LEGO Move Hub"; matched by the
+  service UUID) and wrote the address to `.env`; `02_hub_info` then connected through it.
+  Battery 7.8 V ("100%"), 95 mA idle. `disconnect did not finish within 3.0s` at the end
+  (our timeout caught it; shutdown fine).
+- Session core (#13): `led` round trip 0.17 s; `stop` mid-move until "Stopped." 0.23 /
+  0.55 / 0.25 s; `left 90` / `right 90` incl. round trip 0.62 / 0.67 s; 30 s with sensor
+  polling every 0.5 s, stayed connected.
+- Tilt (3-axis simple): **`up` = resting upright**; tipping changes it as expected.
+- Colours: unreliable apart from red; other bricks often read BLACK (3-5 cm, unsteady hand,
+  dim yellowish light). Distance looks plausible (10 = nothing, smaller = closer).
+  Deliberately **not** calibrated further for now: good enough to experiment.
+- `boost-tui` arrow keys: the first version (0.3 s steps) drove jerkily and a held arrow
+  restarted driving right after STOP. Now hold-to-drive (`Session.hold`): smooth while held,
+  stops ~0.3 s after release, STOP waits until the key is let go; a tapped turn is one
+  0.12 s pulse (small angle), holding turns continuously. Confirmed on the hub.
+- Drift: the **left motor is slightly faster** than the right, forwards and backwards, so
+  straight driving curves a little. Not corrected. Idea: a per-robot trim in `.env`.
+
 ## Platform log
 
 Record what was verified on real hardware.
@@ -61,5 +81,6 @@ Record what was verified on real hardware.
 | Date | Platform | Python / bleak | Result |
 |---|---|---|---|
 | 2026-11-21 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ scan, 02 info, 03 LED, 04 motors, 05 vision+tilt (with `patch_pylgbst`); button untested |
+| 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ `boost-scan --save` + saved address, session core timing, `boost-tui` (hold-to-drive, sensor panel, tilt) |
 | | Ubuntu / Kali / Raspberry Pi OS | | pending |
 | | Windows | | pending |

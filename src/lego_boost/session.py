@@ -44,6 +44,17 @@ GRACE_SECONDS = 5.0  # extra time a command may take before the hub counts as lo
 BATTERY_EVERY = 30.0  # seconds between battery reads while polling (2 BLE round trips each)
 _POLL = 0.05
 
+# Hold-to-drive (boost-tui arrow keys). Terminals report key presses and auto-repeats, never
+# releases: driving continues while repeats keep coming and ends HOLD_REPEAT s after the last.
+HOLD_FIRST = 0.6  # the first press also covers the OS delay before auto-repeat starts
+HOLD_REPEAT = 0.3  # longer than the gap between two auto-repeats (~30-100 ms)
+HOLD_MAX = 10.0  # one hold never drives longer than this (release and press again)
+HOLD_DIRECTIONS = ("forward", "back", "left", "right")
+# A tapped turn is one short pulse that the hub stops by itself (no BLE delay added), so
+# small angles are possible (~15-20 deg); keeping the key down turns on continuously.
+TAP_TURN_SECONDS = 0.12
+REPEAT_GAP = 0.15  # presses closer than this are auto-repeats (key held), slower ones are taps
+
 
 class _Worker:
     """One worker thread with its own queue (abandoned as a whole if it gets stuck)."""
@@ -86,6 +97,12 @@ class Session:
         self._next_battery = 0.0
         self.last_distance: float | None = None
         self.last_tilt: str | None = None
+        self._hold_direction: str | None = None  # set while a hold is driving
+        self._hold_until = 0.0
+        self._hold_end = 0.0
+        self._hold_repeats = 0  # auto-repeats seen (key held down)
+        self._hold_taps = 0  # separate taps not yet turned into a pulse
+        self._hold_last = 0.0
 
     # --- lifecycle ----------------------------------------------------------
     def open(self) -> None:
@@ -164,6 +181,37 @@ class Session:
             self._worker.queue.put((self._gen, cmd))
             self._worker.pending += 1
 
+    def hold(self, direction: str) -> None:
+        """Drive while this is called again and again (an arrow key held down).
+
+        The first call starts the motors; auto-repeats (calls < REPEAT_GAP apart) keep them
+        going and may change direction. They stop HOLD_REPEAT s after the last call, after
+        HOLD_MAX s at the latest, or at once on stop(). A tapped turn is one short pulse
+        (TAP_TURN_SECONDS) per tap, so small angles are possible.
+        """
+        if direction not in HOLD_DIRECTIONS or self.state != CONNECTED:
+            return
+        now = time.monotonic()
+        with self._lock:
+            if self._hold_direction is not None:  # already driving: keep going
+                gap, self._hold_last = now - self._hold_last, now
+                self._hold_direction = direction
+                if gap < REPEAT_GAP:  # auto-repeat: the key is held down
+                    self._hold_repeats += 1
+                    self._hold_until = min(now + HOLD_REPEAT, self._hold_end)
+                else:  # another tap
+                    self._hold_taps += 1
+                    self._hold_until = min(now + HOLD_FIRST, self._hold_end)
+                return
+        if self.busy():
+            return  # another command is running; a held key will try again in a moment
+        self._hold_direction = direction
+        self._hold_repeats = self._hold_taps = 0
+        self._hold_last = now
+        self._hold_until = now + HOLD_FIRST
+        self._hold_end = now + HOLD_MAX
+        self.submit(Command("hold", (direction,)))
+
     def stop(self) -> None:
         """Cancel queued commands and stop the motors (sent by the worker, not this thread)."""
         worker = self._worker
@@ -177,6 +225,7 @@ class Session:
                         worker.pending -= 1
                 except queue.Empty:
                     break
+            self._hold_until = 0.0
             worker.queue.put((self._gen, Command("stop")))
             worker.pending += 1
         worker.wake.set()
@@ -295,6 +344,8 @@ class Session:
 
     def _budget(self, cmd: Command) -> float:
         name, args = cmd.name, cmd.args
+        if name == "hold":
+            return HOLD_MAX + self._grace
         if name in ("forward", "back"):
             return args[0] + self._grace
         if name in ("left", "right"):
@@ -344,9 +395,51 @@ class Session:
             raise ValueError(f"no motor on port {port}")
         return motor
 
+    def _run_hold(self, gen: int, w: _Worker) -> None:
+        motor = self.robot.hub.motor_AB
+        speed, turn = kid._speed(kid.DEFAULT_SPEED), kid._speed(kid.TURN_SPEED)
+        speeds = {
+            "forward": (speed, speed),
+            "back": (-speed, -speed),
+            "left": (-turn, turn),
+            "right": (turn, -turn),
+        }
+        running = None
+        try:
+            if self._hold_direction in ("left", "right"):  # tap = pulse; held = continuous
+                while True:
+                    pulse = speeds.get(self._hold_direction, speeds["left"])
+                    self._timed(motor, TAP_TURN_SECONDS, *pulse, gen, w)
+                    while (
+                        not self._hold_repeats
+                        and not self._hold_taps
+                        and not self._cancelled(gen)
+                        and time.monotonic() < self._hold_until
+                    ):
+                        w.wake.wait(_POLL)
+                    if self._cancelled(gen) or self._hold_repeats:
+                        break  # stopped, or the key is held: turn continuously below
+                    if not self._hold_taps:
+                        return  # no more taps (the finally block still sends a stop)
+                    with self._lock:
+                        self._hold_taps -= 1
+            while not self._cancelled(gen) and time.monotonic() < self._hold_until:
+                direction = self._hold_direction
+                if direction != running and direction in speeds:
+                    motor.start_speed(*speeds[direction])
+                    running = direction
+                w.wake.wait(_POLL)
+        finally:
+            with self._lock:
+                self._hold_direction = None
+            motor.stop()
+
     def _run(self, cmd: Command, gen: int, w: _Worker) -> str | None:
         robot, name, args = self.robot, cmd.name, cmd.args
         speed, turn = kid._speed(kid.DEFAULT_SPEED), kid._speed(kid.TURN_SPEED)
+        if name == "hold":
+            self._run_hold(gen, w)
+            return None
         if name == "stop":
             robot.stop()
             return self._t("stopped")
