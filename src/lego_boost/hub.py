@@ -73,47 +73,20 @@ def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
 
 
 def patch_pylgbst() -> None:
-    """Work around two pylgbst bugs at the pinned commit (71dfc63). Idempotent.
+    """Work around two pylgbst bugs at the pinned commit (789a52e). Idempotent.
 
-    1. On macOS 12+ pylgbst calls `BleakConnection.find_device(..., service_uuids=[...])`,
-       but `find_device` accepts no extra kwargs -> TypeError kills the comms thread and
-       every connect fails with "communication threads not functioning". Our own scan
-       finds the hub without the service filter, so the extra kwargs are dropped.
-       Harmless on Linux/Windows (they never pass the kwarg).
-    2. `MsgHubAction.is_reply` raises TypeError for any other upstream message instead of
-       returning False. A sensor value arriving while `hub.disconnect()` waits for its
-       reply kills pylgbst's processing thread.
-    (1 and 2 are fixed upstream in undera/pylgbst#142 / #144, not released yet.)
-    3. A failed BLE connect (BlueZ: "failed to discover services" right after the hub was
+    1. A failed BLE connect (BlueZ: "failed to discover services" right after the hub was
        switched back on) ends pylgbst's connection thread with a full traceback on stderr,
        which garbles boost-tui. Log one line instead; connect() then reports and retries.
-    4. A vision sensor reading sent just before a mode switch is decoded with the new
+    2. A vision sensor reading sent just before a mode switch is decoded with the new
        mode's layout (1 byte where 4 are expected) -> AssertionError traceback (seen on
        Kali in boost-tui). Drop such stale readings.
+
+    The macOS `find_device(service_uuids=...)` and `MsgHubAction.is_reply` workarounds
+    were dropped once their upstream fixes were pinned (undera/pylgbst#142, #144).
     """
-    from pylgbst.comms.cbleak import BleakConnection, BleakDriver
-    from pylgbst.messages import MsgHubAction
+    from pylgbst.comms.cbleak import BleakDriver
     from pylgbst.peripherals import VisionSensor
-
-    original_find = BleakConnection.find_device
-    if not getattr(original_find, "_lego_boost_patched", False):
-
-        async def find_device(self, hub_mac=None, hub_name=None, **_ignored):
-            return await original_find(self, hub_mac, hub_name)
-
-        find_device._lego_boost_patched = True
-        BleakConnection.find_device = find_device
-
-    original_is_reply = MsgHubAction.is_reply
-    if not getattr(original_is_reply, "_lego_boost_patched", False):
-
-        def is_reply(self, msg):
-            if not isinstance(msg, MsgHubAction):
-                return False
-            return original_is_reply(self, msg)
-
-        is_reply._lego_boost_patched = True
-        MsgHubAction.is_reply = is_reply
 
     original_thread = BleakDriver._bleak_thread
     if not getattr(original_thread, "_lego_boost_patched", False):

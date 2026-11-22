@@ -15,15 +15,17 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 
 ## Library quirks
 
-- pylgbst pinned to git commit `71dfc63` (2025-01-04, "use BleakScanner instead of
-  discover()"). PyPI 1.3.0 (2023) is broken with bleak ≥ 1.0.
+- pylgbst pinned to git commit `789a52e` (upstream `master`, 2026-11-22; until then
+  `71dfc63`, 2025-01-04). PyPI 1.3.0 (2023) is broken with bleak ≥ 1.0.
 - pylgbst's scanning has no timeout → `lego_boost.scan` scans first, with a timeout.
 - `hub.disconnect()` waits for a reply that may never come → `safe_shutdown()` uses timeouts.
-- **macOS bug at `71dfc63`:** `_bleak_thread` passes `service_uuids=` to `find_device()`, which
-  takes no kwargs → comms thread dies, every connect fails with "communication threads not
-  functioning". Fixed by `lego_boost.hub.patch_pylgbst()` (drops the kwarg).
-- **`MsgHubAction.is_reply` raises `TypeError`** on any other message instead of returning False;
-  a sensor value arriving during `hub.disconnect()` kills the processing thread. Same patch.
+- **Fixed upstream, pinned since 2026-11-22:** at `71dfc63` macOS 12+ connects died because
+  `find_device()` took no `service_uuids` kwarg (undera/pylgbst#142), and
+  `MsgHubAction.is_reply` raised `TypeError` during `hub.disconnect()` (#144). Our
+  `patch_pylgbst()` workarounds for both were removed.
+- **Discarded motor commands raise** (upstream `f8a09c2`): a command the hub drops with nothing
+  taking over raises `RuntimeError("Port ... discarded the command")` instead of hanging. The
+  session reports it as one "oops" line.
 - **One pending request at a time:** `hub.send()` asserts there is no outstanding sync
   request. Two threads sending commands (e.g. `motor.stop()` from the UI thread while another
   thread waits in `timed()`) raise `AssertionError`. `lego_boost.session` therefore sends
@@ -160,5 +162,6 @@ Record what was verified on real hardware.
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ kids missions 1–5 (EN + DE 3, 4, 5), colour debounce with LEGO bricks |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ hw-2: `BOOST_TRIM`, degree turns (recalibrated), raw mode, German console, stop, reconnect |
 | 2026-11-22 | Kali Linux (bare metal), BlueZ | 3.12 / 3.1.0 | ✅ setup, 02, 03, mission 3, console, TUI; reconnect needed a retry (fixed), TUI hang after quick restart (fixed); repeated reconnects flaky (stale BlueZ state, old BCM20702 adapter; reset steps in setup-linux.md) |
+| 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ pylgbst pin `789a52e` without workarounds 1+2: stop mid-move, queued moves, hold-to-drive direction changes, stop while holding, tapped turns, raw `angle` + stop (no discarded-command errors); `02_hub_info` with upstream's `service_uuids` scan, clean disconnect |
 | | Ubuntu / Raspberry Pi OS | | pending |
 | | Windows | | pending |

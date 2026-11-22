@@ -87,30 +87,40 @@ def test_safe_shutdown_does_not_hang(monkeypatch):
     assert fake.connection.closed
 
 
-def test_patch_pylgbst_find_device_accepts_service_uuids(monkeypatch):
+def test_pinned_pylgbst_has_the_upstream_fixes():
+    # undera/pylgbst#142 / #144: guards against moving the pin back to a commit without them
     import asyncio
+    import inspect
 
+    import bleak
     from pylgbst.comms.cbleak import BleakConnection
-
-    calls = []
-
-    async def fake_find_device(self, hub_mac=None, hub_name=None):
-        calls.append((hub_mac, hub_name))
-        return "DEVICE"
-
-    monkeypatch.setattr(BleakConnection, "find_device", fake_find_device)
-    hub_mod.patch_pylgbst()
-    hub_mod.patch_pylgbst()  # idempotent: must not wrap twice
-
-    result = asyncio.run(BleakConnection.find_device(None, "AA", "Move Hub", service_uuids=["x"]))
-    assert result == "DEVICE"
-    assert calls == [("AA", "Move Hub")]
-
-
-def test_patch_pylgbst_hub_action_ignores_other_messages():
     from pylgbst.messages import MsgHubAction, MsgPortValueSingle
 
-    hub_mod.patch_pylgbst()
+    params = inspect.signature(BleakConnection.find_device).parameters.values()
+    assert any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params)
+
+    seen = {}
+
+    class FakeScanner:
+        def __init__(self, detection_callback, **kwargs):
+            seen.update(kwargs)
+            self.callback = detection_callback
+
+        async def start(self):
+            device = type("D", (), {"address": "AA", "name": "Move Hub"})()
+            await self.callback(device, None)
+
+        async def stop(self):
+            pass
+
+    original = bleak.BleakScanner
+    bleak.BleakScanner = FakeScanner
+    try:
+        asyncio.run(BleakConnection().find_device("AA", "Move Hub", service_uuids=["x"]))
+    finally:
+        bleak.BleakScanner = original
+    assert seen == {"service_uuids": ["x"]}  # passed on, as the macOS filter needs
+
     request = MsgHubAction(MsgHubAction.DISCONNECT)
     assert not request.is_reply(MsgPortValueSingle.__new__(MsgPortValueSingle))
     assert request.is_reply(MsgHubAction(MsgHubAction.UPSTREAM_DISCONNECT))
