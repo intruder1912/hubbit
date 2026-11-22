@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: monthly
     labels: [infra, dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
     groups:
       actions:
         patterns: ["*"]
@@ -13,6 +16,9 @@ updates:
     schedule:
       interval: monthly
     labels: [infra, dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
     groups:
       python:
         patterns: ["*"]

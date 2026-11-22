@@ -1,0 +1,30 @@
+# git-cliff: CHANGELOG.md entries from Conventional Commits (see docs/releasing.md).
+# Run: uvx git-cliff --unreleased --tag vX.Y.Z --prepend CHANGELOG.md
+
+[changelog]
+header = ""
+body = """
+{% if version %}## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}{% else %}## [unreleased]{% endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+{% for commit in commits %}- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message | upper_first }}
+{% endfor %}{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = true
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+"
+commit_parsers = [
+  { message = "(?i)^chore\\(release\\)", skip = true },
+  { message = "(?i)^chore\\(deps\\)", group = "<!-- 5 -->Dependencies" },
+  { message = "(?i)^feat", group = "<!-- 0 -->Features" },
+  { message = "(?i)^fix", group = "<!-- 1 -->Fixes" },
+  { message = "(?i)^perf", group = "<!-- 2 -->Performance" },
+  { message = "(?i)^docs", group = "<!-- 3 -->Docs" },
+  { message = "(?i)^(refactor|test|build|ci|chore|revert)", group = "<!-- 4 -->Maintenance" },
+  { message = ".*", skip = true }, # unknown types (older, pre-0.1.0 commits)
+]

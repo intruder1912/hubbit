@@ -2,7 +2,8 @@
 
 ## Supported versions
 
-Only the latest `main` is supported. There are no releases yet.
+Only the latest release and `main` are supported. Release files carry a build provenance
+attestation (`gh attestation verify <file> --repo intruder1912/lego-boost`).
 
 ## Reporting a vulnerability
 
