@@ -13,12 +13,19 @@ German: `Roboter` has the same robot with German method names and messages
 
 Assumes a driving model where motors A and B are the left and right wheels/tracks
 (e.g. Vernie, M.T.R.4, Frankie's base). Speeds are 0..100 percent.
+
+Drift: if one wheel is a bit faster, set `BOOST_TRIM` in `.env` (percent, -30..30).
+`BOOST_TRIM=5` runs the left wheel 5% slower (robot drifts right), `-5` the right wheel.
+A wheel is only ever slowed down, never sped up.
 """
 
 from __future__ import annotations
 
+import math
+import os
 import time
 
+from lego_boost.config import load_env
 from lego_boost.hub import connect, link_alive, safe_shutdown
 from lego_boost.i18n import DE, EN, color_to_english, color_word, color_words, t
 
@@ -49,6 +56,38 @@ def _speed(percent: float) -> float:
     return max(-100.0, min(100.0, percent)) / 100.0
 
 
+ENV_TRIM = "BOOST_TRIM"
+MAX_TRIM = 30.0
+
+
+def read_trim(lang: str = EN) -> float:
+    """$BOOST_TRIM (shell or .env) as a percent in -MAX_TRIM..MAX_TRIM; 0 if unset.
+
+    A bad value prints a warning: out of range is clamped, not a number gives 0.
+    """
+    load_env()
+    raw = os.environ.get(ENV_TRIM, "").strip()
+    if not raw:
+        return 0.0
+    try:
+        value = float(raw.replace(",", "."))
+    except ValueError:
+        value = math.nan
+    used = 0.0 if math.isnan(value) else max(-MAX_TRIM, min(MAX_TRIM, value))
+    if used != value:
+        print(t(lang, "bad_trim", value=raw, max=f"{MAX_TRIM:g}", used=f"{used:g}"))
+    return used
+
+
+def trimmed(left: float, right: float, trim: float) -> tuple[float, float]:
+    """Wheel speeds with the trim applied: trim > 0 slows the left wheel, < 0 the right."""
+    if trim > 0:
+        left *= 1 - trim / 100
+    elif trim < 0:
+        right *= 1 + trim / 100
+    return left, right
+
+
 def turn_seconds(degrees: float) -> float:
     """Seconds of turning on the spot for about `degrees` (linear guess from the calibration)."""
     return QUARTER_TURN_SECONDS * abs(degrees) / 90.0
@@ -66,6 +105,7 @@ class Robot:
         self._last_distance: float | None = None
         self._last_tilt: str | None = None
         self._tilt_subscribed = False
+        self.trim = read_trim(self.lang)  # percent, see BOOST_TRIM in the module docstring
 
     # --- connection -------------------------------------------------------
     def __enter__(self) -> Robot:
@@ -93,11 +133,15 @@ class Robot:
         self.hub.led.set_color(COLORS[name])
 
     # --- driving ----------------------------------------------------------
+    def wheels(self, left: float, right: float) -> tuple[float, float]:
+        """Left/right wheel speeds (-1..1) with this robot's trim applied."""
+        return trimmed(left, right, self.trim)
+
     def forward(self, seconds: float = 1, speed: float = DEFAULT_SPEED) -> None:
-        self.hub.motor_AB.timed(seconds, _speed(speed), _speed(speed))
+        self.hub.motor_AB.timed(seconds, *self.wheels(_speed(speed), _speed(speed)))
 
     def backward(self, seconds: float = 1, speed: float = DEFAULT_SPEED) -> None:
-        self.hub.motor_AB.timed(seconds, -_speed(speed), -_speed(speed))
+        self.hub.motor_AB.timed(seconds, *self.wheels(-_speed(speed), -_speed(speed)))
 
     def turn_left(
         self,
@@ -111,7 +155,7 @@ class Robot:
         """
         if degrees is not None:
             seconds = turn_seconds(degrees)
-        self.hub.motor_AB.timed(seconds, -_speed(speed), _speed(speed))
+        self.hub.motor_AB.timed(seconds, *self.wheels(-_speed(speed), _speed(speed)))
 
     def turn_right(
         self,
@@ -125,7 +169,7 @@ class Robot:
         """
         if degrees is not None:
             seconds = turn_seconds(degrees)
-        self.hub.motor_AB.timed(seconds, _speed(speed), -_speed(speed))
+        self.hub.motor_AB.timed(seconds, *self.wheels(_speed(speed), -_speed(speed)))
 
     def spin_motor(self, degrees: float = 360, speed: float = DEFAULT_SPEED) -> None:
         """Turn the extra motor (port C or D), e.g. Vernie's head or a shooter."""

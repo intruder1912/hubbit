@@ -277,3 +277,17 @@ def test_tapped_turns_are_short_pulses(make):
     assert [call[1] for call in pulses] == [TAP_TURN_SECONDS, TAP_TURN_SECONDS]
     assert pulses[0][2:4] == (-0.5, 0.5)
     assert not [call for call in motor.calls if call[0] == "start_speed"]  # never continuous
+
+
+def test_drive_commands_use_trim_but_raw_motor_does_not(make, monkeypatch):
+    monkeypatch.setenv("BOOST_TRIM", "-20")
+    session, hubs, _ = make()
+    session.handle("forward 0.1")
+    assert session.wait_idle(2)
+    session.handle("raw")
+    session.handle("motor AB 40 0.1")
+    assert session.wait_idle(2)
+    speed = kid.DEFAULT_SPEED / 100
+    calls = hubs[0].motor_AB.calls
+    assert calls[0] == ("timed", 0.1, speed, pytest.approx(speed * 0.8), False)
+    assert calls[1][2:4] == (0.4, 0.4)

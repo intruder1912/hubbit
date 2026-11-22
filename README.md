@@ -68,6 +68,10 @@ with Robot() as robot:
 around. You still press the green button before each connection: the hub only accepts one
 while it blinks. `BOOST_LANG=de` in `.env` makes German the default.
 
+Robot doesn't drive straight? `BOOST_TRIM=5` in `.env` runs the left wheel 5% slower (for a
+robot that drifts right), `BOOST_TRIM=-5` the right wheel. Tune it with `forward 3` in the
+console. Raw mode (`motor AB ...`) ignores it.
+
 ## Console: drive the robot by typing
 
 ```text

@@ -2,6 +2,7 @@
 
     BOOST_HUB_ADDRESS=00:16:53:AB:CD:EF    # written by `boost-scan --save`
     BOOST_LANG=de
+    BOOST_TRIM=5                           # left wheel 5% slower (see kid.py)
 
 `load_env()` copies the values into `os.environ` unless a variable is already set there,
 so a variable set in the shell always wins. See `.env.example` for the keys.
