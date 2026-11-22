@@ -1,0 +1,30 @@
+name: Hardware / platform report
+description: Tell us whether the setup works on your OS and Bluetooth adapter
+labels: [hardware, needs-triage]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS, Ubuntu, Kali, Raspberry Pi OS, other Linux, Windows, other]
+    validations:
+      required: true
+  - type: input
+    id: details
+    attributes:
+      label: OS version, machine, Bluetooth adapter
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options: [Everything works, Partly works, Does not work]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What you tried and what happened
+      description: e.g. boost-scan, experiments/02_hub_info.py, kids/01_hello_light.py
+      render: text

@@ -2,7 +2,7 @@
 
 Python experiments controlling a **LEGO BOOST Move Hub (17101 / 88006)** over Bluetooth LE
 with [pylgbst](https://github.com/undera/pylgbst), without the LEGO app. Used on macOS
-(primary), Linux (Kali, Raspberry Pi OS, Ubuntu) and Windows (a child's notebook).
+(primary), Linux (Kali, Raspberry Pi OS, Ubuntu) and Windows (a kids notebook).
 
 ## Commands
 
@@ -56,6 +56,11 @@ next step, the batch plan with usage estimates/actuals, the cut lines and open d
 At the end of a batch: ask the user for `/usage` numbers, record them in #8, and update
 "Next step" there.
 
-Work is tracked in GitHub issues (`gh issue list`). Reference the issue in commits
-(`Closes #N`). Record hardware findings (what worked on which OS) in `docs/hardware-notes.md`.
-Run `uv run ruff check . && uv run pytest` before committing.
+Work is tracked in GitHub issues (`gh issue list`). Record hardware findings (what worked on
+which OS) in `docs/hardware-notes.md`. Run `uv run ruff check . && uv run pytest` before committing.
+
+**`main` is protected — never commit or push to it directly.** For each issue: branch
+`NN-short-name` → commit (`Closes #N`) → push → `gh pr create`. Wait for CI on all three OSes;
+when green, Claude merges its own PR (`gh pr merge --squash --delete-branch --admin`) and tells
+the user. Outside PRs: review only, never merge them without the user's go-ahead.
+New issues are triaged per `docs/triage.md` (labels: one type + area, remove `needs-triage`).

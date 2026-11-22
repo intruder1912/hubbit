@@ -1,5 +1,7 @@
 # lego-boost
 
+[![CI](https://github.com/intruder1912/lego-boost/actions/workflows/ci.yml/badge.svg)](https://github.com/intruder1912/lego-boost/actions/workflows/ci.yml)
+
 Experiments with the **LEGO BOOST Move Hub** (set 17101, hub 88006) from Python — no LEGO
 app or tablet needed. Uses [pylgbst](https://github.com/undera/pylgbst) with the
 [bleak](https://github.com/hbldh/bleak) Bluetooth LE backend, so the same code runs on
@@ -71,8 +73,11 @@ uv run ruff check .      # lint
 uv run ruff format .     # format
 ```
 
-Work is organised in [GitHub issues](https://github.com/intruder1912/lego-boost/issues).
-See [docs/workflow.md](docs/workflow.md) and [CLAUDE.md](CLAUDE.md).
+Work is organised in [GitHub issues](https://github.com/intruder1912/lego-boost/issues);
+questions and ideas go to [Discussions](https://github.com/intruder1912/lego-boost/discussions).
+Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Security problems: see [SECURITY.md](SECURITY.md).
+More: [docs/workflow.md](docs/workflow.md), [docs/triage.md](docs/triage.md), [CLAUDE.md](CLAUDE.md).
 
 ## License
 

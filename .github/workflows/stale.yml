@@ -1,0 +1,30 @@
+name: Close unanswered issues
+
+# Only issues labelled `needs-info`: reminder after 14 days, closed 7 days later.
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v11
+        with:
+          only-issue-labels: needs-info
+          days-before-issue-stale: 14
+          days-before-issue-close: 7
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          stale-issue-label: stale
+          stale-issue-message: >-
+            This issue is waiting for more information. It will be closed in 7 days
+            if there is no reply. Just comment to keep it open.
+          close-issue-message: >-
+            Closed because the requested information didn't arrive. Feel free to
+            reopen with the details any time.

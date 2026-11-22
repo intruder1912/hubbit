@@ -1,0 +1,49 @@
+name: Triage
+
+# Labels new issues and moves `needs-info` issues back to triage when the author answers.
+# Issue text is only read from environment variables, never interpolated into the script.
+
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  platform-label:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      NUMBER: ${{ github.event.issue.number }}
+      BODY: ${{ github.event.issue.body }}
+    steps:
+      - name: Add platform label from the issue form
+        run: |
+          platform=$(printf '%s\n' "$BODY" | tr -d '\r' | awk '/^### Platform/{getline; getline; print; exit}')
+          case "$platform" in
+            macOS) label=platform:macos ;;
+            Ubuntu|Kali|"Raspberry Pi OS"|"other Linux") label=platform:linux ;;
+            Windows) label=platform:windows ;;
+            *) echo "no platform label for '$platform'"; exit 0 ;;
+          esac
+          gh issue edit "$NUMBER" --add-label "$label"
+
+  author-replied:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.comment.user.login == github.event.issue.user.login &&
+      contains(github.event.issue.labels.*.name, 'needs-info')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - name: Back to triage
+        run: gh issue edit "$NUMBER" --remove-label needs-info --add-label needs-triage
