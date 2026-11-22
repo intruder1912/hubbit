@@ -138,3 +138,109 @@ def test_unknown_peripheral_warning_is_filtered(caplog):
         logger.warning("Have no dedicated class for peripheral type 0x42 (UNKNOWN) on port 0x46")
         logger.warning("something else")
     assert [r.getMessage() for r in caplog.records] == ["something else"]
+
+
+class FakeConnection:
+    def __init__(self):
+        self.disconnects = 0
+
+    def disconnect(self):
+        self.disconnects += 1
+
+
+def _fake_pylgbst(monkeypatch, *outcomes):
+    """connect() with a fake scan + pylgbst. Each outcome: "hang", an exception, or a hub."""
+    import threading
+
+    import pylgbst
+    import pylgbst.hub
+
+    connections, scans = [], []
+    outcomes = list(outcomes)
+
+    def fake_connection(**_):
+        connections.append(FakeConnection())
+        return connections[-1]
+
+    def fake_move_hub(conn):
+        outcome = outcomes.pop(0)
+        if outcome == "hang":  # pylgbst waits for a reply that never comes
+            threading.Event().wait()
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(hub_mod, "resolve_address", lambda *a: scans.append(a) or "addr")
+    monkeypatch.setattr(pylgbst, "get_connection_bleak", fake_connection)
+    monkeypatch.setattr(pylgbst.hub, "MoveHub", fake_move_hub)
+    return connections, scans
+
+
+def test_connect_gives_up_when_the_hub_never_answers(monkeypatch):
+    connections, _ = _fake_pylgbst(monkeypatch, "hang")
+    monkeypatch.setattr(hub_mod, "CONNECT_TIMEOUT", 0.3)
+    start = time.monotonic()
+    with pytest.raises(hub_mod.HubConnectError, match="green button"):
+        hub_mod.connect()
+    assert time.monotonic() - start < 3  # no retry after a timeout: waiting stays short
+    assert connections[0].disconnects == 1  # pylgbst's threads are told to stop
+
+
+def test_connect_tries_once_more_after_a_failed_setup(monkeypatch, capsys):
+    hub = object()
+    connections, scans = _fake_pylgbst(monkeypatch, RuntimeError("threads not functioning"), hub)
+    assert hub_mod.connect() is hub
+    assert len(scans) == 2 and connections[0].disconnects == 1
+    assert "once more" in capsys.readouterr().out
+
+
+def test_connect_reports_a_second_failure(monkeypatch):
+    _fake_pylgbst(monkeypatch, RuntimeError("first"), RuntimeError("second"))
+    with pytest.raises(hub_mod.HubConnectError, match="second"):
+        hub_mod.connect()
+
+
+def test_patch_pylgbst_bleak_thread_error_is_one_log_line(caplog):
+    import asyncio
+    import logging
+
+    from pylgbst.comms.cbleak import BleakDriver
+
+    hub_mod.patch_pylgbst()
+    driver = BleakDriver.__new__(BleakDriver)
+    driver.hub_mac, driver.hub_name = "addr", "Move Hub"
+
+    async def failing_connect(*_a, **_k):
+        raise RuntimeError("failed to discover services, device disconnected")
+
+    import pylgbst.comms.cbleak as cbleak
+
+    original = cbleak.BleakConnection.connect
+    cbleak.BleakConnection.connect = failing_connect
+    try:
+        with caplog.at_level(logging.WARNING):
+            asyncio.run(driver._bleak_thread())  # must not raise
+    finally:
+        cbleak.BleakConnection.connect = original
+    assert "failed to discover services" in caplog.text
+
+
+def test_patch_pylgbst_drops_a_stale_vision_reading():
+    from pylgbst.messages import MsgPortInputFmtSingle, MsgPortValueSingle
+    from pylgbst.peripherals import VisionSensor
+
+    hub_mod.patch_pylgbst()
+    sensor = VisionSensor(SimpleNamespace(), 3)
+    sensor._port_mode = MsgPortInputFmtSingle(3, VisionSensor.COLOR_DISTANCE_FLOAT, True, 1)
+    seen = []
+    sensor._subscribers.add(lambda *values: seen.append(values))
+
+    stale = MsgPortValueSingle.__new__(MsgPortValueSingle)
+    stale.port, stale.payload = 3, b"\xff"  # 1 byte from the old mode (seen on Kali)
+    sensor._handle_port_data(stale)  # no AssertionError traceback
+    assert seen == []
+
+    good = MsgPortValueSingle.__new__(MsgPortValueSingle)
+    good.port, good.payload = 3, bytes([9, 4, 0, 0])
+    sensor._handle_port_data(good)
+    assert seen == [(9, 4.0)]

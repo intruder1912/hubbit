@@ -253,3 +253,42 @@ def test_sim_polls_the_battery_into_the_panel():
         assert "Pfeile: fahren" in str(app.query_one("#keys").render())
 
     run(test, lang="de")
+
+
+def test_reconnect_while_still_connecting_says_so():
+    import threading
+
+    release = threading.Event()
+
+    def connect():
+        release.wait(5)  # a slow scan / setup
+        return sim_robot(lambda text: None)
+
+    async def test(pilot, app, sim):
+        app.query_one("#command", Input).value = "reconnect"
+        await pilot.press("enter")
+        assert await log_shows(pilot, app, "Still connecting")
+        release.set()
+        for _ in range(100):
+            if app.session.state == CONNECTED:
+                break
+            await pilot.pause(0.02)
+        assert app.session.state == CONNECTED
+
+    run(test, connect=connect)
+
+
+def test_quit_does_not_wait_for_a_hanging_connect():
+    import threading
+    import time
+
+    def connect():
+        threading.Event().wait(8)  # a connect that hangs (half-open BLE link)
+        return sim_robot(lambda text: None)
+
+    async def test(pilot, app, sim):
+        await pilot.press("ctrl+q")
+
+    start = time.monotonic()
+    run(test, connect=connect)
+    assert time.monotonic() - start < 5  # before: Python waited for the connect thread

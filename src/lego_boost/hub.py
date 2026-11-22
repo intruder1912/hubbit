@@ -24,8 +24,17 @@ log = logging.getLogger(__name__)
 ENV_ADDRESS = "BOOST_HUB_ADDRESS"
 
 
+# MoveHub() waits up to 10 s for the built-in devices, then asks the hub four questions
+# with no timeout at all. On BlueZ a half-open link right after a disconnect never answers.
+CONNECT_TIMEOUT = 25.0
+
+
 class HubNotFoundError(RuntimeError):
     pass
+
+
+class HubConnectError(RuntimeError):
+    """The hub was found, but setting up the connection failed or never finished."""
 
 
 def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
@@ -66,9 +75,17 @@ def patch_pylgbst() -> None:
     2. `MsgHubAction.is_reply` raises TypeError for any other upstream message instead of
        returning False. A sensor value arriving while `hub.disconnect()` waits for its
        reply kills pylgbst's processing thread.
+    (1 and 2 are fixed upstream in undera/pylgbst#142 / #144, not released yet.)
+    3. A failed BLE connect (BlueZ: "failed to discover services" right after the hub was
+       switched back on) ends pylgbst's connection thread with a full traceback on stderr,
+       which garbles boost-tui. Log one line instead; connect() then reports and retries.
+    4. A vision sensor reading sent just before a mode switch is decoded with the new
+       mode's layout (1 byte where 4 are expected) -> AssertionError traceback (seen on
+       Kali in boost-tui). Drop such stale readings.
     """
-    from pylgbst.comms.cbleak import BleakConnection
+    from pylgbst.comms.cbleak import BleakConnection, BleakDriver
     from pylgbst.messages import MsgHubAction
+    from pylgbst.peripherals import VisionSensor
 
     original_find = BleakConnection.find_device
     if not getattr(original_find, "_lego_boost_patched", False):
@@ -90,6 +107,31 @@ def patch_pylgbst() -> None:
         is_reply._lego_boost_patched = True
         MsgHubAction.is_reply = is_reply
 
+    original_thread = BleakDriver._bleak_thread
+    if not getattr(original_thread, "_lego_boost_patched", False):
+
+        async def _bleak_thread(self):
+            try:
+                await original_thread(self)
+            except Exception as exc:  # noqa: BLE001 - the thread ends either way
+                log.warning("Bluetooth connection failed: %s", exc)
+
+        _bleak_thread._lego_boost_patched = True
+        BleakDriver._bleak_thread = _bleak_thread
+
+    original_handle = VisionSensor._handle_port_data
+    if not getattr(original_handle, "_lego_boost_patched", False):
+
+        def _handle_port_data(self, msg):
+            mode = getattr(self._port_mode, "mode", None)
+            if mode == VisionSensor.COLOR_DISTANCE_FLOAT and len(msg.payload) < 4:
+                log.debug("Dropped a stale vision reading: %r", msg)
+                return
+            original_handle(self, msg)
+
+        _handle_port_data._lego_boost_patched = True
+        VisionSensor._handle_port_data = _handle_port_data
+
 
 class _QuietUnknownPeripheral(logging.Filter):
     """Drop pylgbst's warning about the Move Hub's internal device on port 0x46 (type 0x42).
@@ -108,17 +150,64 @@ def quiet_pylgbst_logs() -> None:
         logger.addFilter(_QuietUnknownPeripheral())
 
 
-def connect(address: str | None = None, timeout: float = 15.0):
-    """Return a connected pylgbst MoveHub. Prefer the `boost()` context manager."""
+def _close_quietly(conn) -> None:
+    def close():
+        try:
+            conn.disconnect()
+        except Exception as exc:  # noqa: BLE001
+            log.debug("connection.disconnect failed: %s", exc)
+
+    _run_with_timeout(close, 3.0)
+
+
+def _set_up_hub(addr: str):
+    """MoveHub(conn) with a time limit; raises HubConnectError. Stuck threads are daemons."""
     from pylgbst import get_connection_bleak
     from pylgbst.hub import MoveHub
 
+    conn = get_connection_bleak(hub_mac=addr, hub_name=MOVE_HUB_NAME)
+    result: dict = {}
+
+    def build():
+        try:
+            result["hub"] = MoveHub(conn)
+        except Exception as exc:  # noqa: BLE001 - reported below
+            result["error"] = exc
+
+    thread = threading.Thread(target=build, daemon=True, name="lego-boost connect")
+    thread.start()
+    thread.join(CONNECT_TIMEOUT)
+    if "hub" in result:
+        return result["hub"]
+    _close_quietly(conn)
+    if thread.is_alive():
+        raise HubConnectError(
+            f"the hub did not answer within {CONNECT_TIMEOUT:.0f}s. Switch it off and on "
+            "(green button), then try again."
+        )
+    error = result["error"]
+    raise HubConnectError(f"{error}. Press the green button and try again.") from error
+
+
+def connect(address: str | None = None, timeout: float = 15.0):
+    """Return a connected pylgbst MoveHub. Prefer the `boost()` context manager.
+
+    A setup that fails fast (BlueZ right after the hub restarted) is tried once more;
+    one that hangs is given up after CONNECT_TIMEOUT (no retry, so waiting stays short).
+    """
     patch_pylgbst()
     quiet_pylgbst_logs()
-    addr = resolve_address(address, timeout)
-    log.info("Connecting to %s", addr)
-    conn = get_connection_bleak(hub_mac=addr, hub_name=MOVE_HUB_NAME)
-    return MoveHub(conn)
+    for attempt in (1, 2):
+        addr = resolve_address(address, timeout)
+        log.info("Connecting to %s", addr)
+        try:
+            return _set_up_hub(addr)
+        except HubConnectError as err:
+            if attempt == 2 or err.__cause__ is None:  # second failure, or a timeout
+                raise
+            log.info("Connection failed (%s), retrying", err.__cause__)
+            print("Connection failed, trying once more ...")
+    raise AssertionError("unreachable")
 
 
 def _run_with_timeout(fn, timeout: float) -> None:

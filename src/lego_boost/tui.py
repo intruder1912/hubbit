@@ -16,6 +16,7 @@ SAFETY: drives the motors. Space / Escape / the STOP button stop them at once.
 from __future__ import annotations
 
 import argparse
+import threading
 import time
 from collections.abc import Callable
 
@@ -177,7 +178,7 @@ class BoostTui(App):
         self.set_interval(0.5, self._tick)  # status bar + watchdog
         self.query_one("#command", Input).focus()
         self._connecting = True
-        self.run_worker(self._open, thread=True, group="connect")
+        self._in_background(self._open)
 
     def _relabel(self) -> None:
         lang = self.session.lang
@@ -203,6 +204,12 @@ class BoostTui(App):
         status.set_class(self.session.state != CONNECTED, "lost")
 
     # --- connection (threads: scanning blocks for seconds) -------------------
+    @staticmethod
+    def _in_background(fn: Callable[[], None]) -> None:
+        """Run a connect in a daemon thread. Not a textual worker: those run in asyncio's
+        executor, and quitting would wait for a connect that hangs (seen on Kali)."""
+        threading.Thread(target=fn, daemon=True, name="boost-tui connect").start()
+
     def _open(self) -> None:
         try:
             self.session.open()
@@ -249,9 +256,11 @@ class BoostTui(App):
             self.exit()
             return
         if cmd is not None and cmd.name == "reconnect":
-            if not self._connecting:  # one scan at a time
-                self._connecting = True
-                self.run_worker(self._reconnect, thread=True, group="connect")
+            if self._connecting:  # one scan at a time
+                self._say(t(self.session.lang, "still_connecting"))
+                return
+            self._connecting = True
+            self._in_background(self._reconnect)
             return
         self.session.handle(line)
         self._relabel()  # 'sprache deutsch' / 'language english'
