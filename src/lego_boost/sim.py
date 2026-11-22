@@ -25,6 +25,12 @@ class SimMotor:
         a = speed_primary
         self._say(f"[sim] motor {self.name}: {seconds:g} s at {a * 100:+.0f}% / {b * 100:+.0f}%")
 
+    def start_speed(self, speed_primary=1.0, speed_secondary=None, *args, **kwargs):
+        b = speed_primary if speed_secondary is None else speed_secondary
+        self._say(
+            f"[sim] motor {self.name}: running at {speed_primary * 100:+.0f}% / {b * 100:+.0f}%"
+        )
+
     def angled(self, degrees, speed_primary=1.0, speed_secondary=None, wait_complete=True):
         self._say(f"[sim] motor {self.name}: {degrees:g} deg at {speed_primary * 100:+.0f}%")
 
