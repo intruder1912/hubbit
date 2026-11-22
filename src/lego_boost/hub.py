@@ -12,9 +12,12 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import threading
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from types import SimpleNamespace
 
 from lego_boost.config import load_env
 from lego_boost.scan import MOVE_HUB_NAME, find_hub
@@ -27,6 +30,11 @@ ENV_ADDRESS = "BOOST_HUB_ADDRESS"
 # MoveHub() waits up to 10 s for the built-in devices, then asks the hub four questions
 # with no timeout at all. On BlueZ a half-open link right after a disconnect never answers.
 CONNECT_TIMEOUT = 25.0
+
+# MoveHub() can return without them (BlueZ link dropped during setup); Robot needs them.
+REQUIRED_DEVICES = ("motor_A", "motor_B", "motor_AB", "led")
+
+LINUX_HINT = " If it keeps failing on Linux, reset Bluetooth: see docs/setup-linux.md."
 
 
 class HubNotFoundError(RuntimeError):
@@ -160,8 +168,17 @@ def _close_quietly(conn) -> None:
     _run_with_timeout(close, 3.0)
 
 
+def _hint() -> str:
+    return LINUX_HINT if sys.platform.startswith("linux") else ""
+
+
 def _set_up_hub(addr: str):
-    """MoveHub(conn) with a time limit; raises HubConnectError. Stuck threads are daemons."""
+    """MoveHub(conn) with a time limit; raises HubConnectError. Stuck threads are daemons.
+
+    A cause (`raise ... from`) marks a fast failure that connect() may retry; a timeout
+    has none. Gives up early once pylgbst's BLE thread has died, and closes every
+    half-set-up connection, so BlueZ isn't left with a stale link.
+    """
     from pylgbst import get_connection_bleak
     from pylgbst.hub import MoveHub
 
@@ -176,17 +193,29 @@ def _set_up_hub(addr: str):
 
     thread = threading.Thread(target=build, daemon=True, name="lego-boost connect")
     thread.start()
-    thread.join(CONNECT_TIMEOUT)
+    deadline = time.monotonic() + CONNECT_TIMEOUT
+    was_alive = False
+    while thread.is_alive() and time.monotonic() < deadline:
+        thread.join(0.1)
+        alive = link_alive(SimpleNamespace(connection=conn))
+        if was_alive and not alive and thread.is_alive():
+            result["error"] = ConnectionError("the Bluetooth link was lost during setup")
+            break
+        was_alive = was_alive or alive
+
     if "hub" in result:
-        return result["hub"]
+        missing = [name for name in REQUIRED_DEVICES if getattr(result["hub"], name, None) is None]
+        if not missing:
+            return result["hub"]
+        result["error"] = ConnectionError(f"the hub did not report {', '.join(missing)}")
     _close_quietly(conn)
-    if thread.is_alive():
+    if "error" not in result:
         raise HubConnectError(
             f"the hub did not answer within {CONNECT_TIMEOUT:.0f}s. Switch it off and on "
-            "(green button), then try again."
+            f"(green button), then try again.{_hint()}"
         )
     error = result["error"]
-    raise HubConnectError(f"{error}. Press the green button and try again.") from error
+    raise HubConnectError(f"{error}. Press the green button and try again.{_hint()}") from error
 
 
 def connect(address: str | None = None, timeout: float = 15.0):
@@ -206,7 +235,7 @@ def connect(address: str | None = None, timeout: float = 15.0):
             if attempt == 2 or err.__cause__ is None:  # second failure, or a timeout
                 raise
             log.info("Connection failed (%s), retrying", err.__cause__)
-            print("Connection failed, trying once more ...")
+            print("Connection failed. Press the green button again - trying once more ...")
     raise AssertionError("unreachable")
 
 

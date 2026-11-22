@@ -37,5 +37,20 @@ Right after the hub was switched off and on again, BlueZ sometimes fails the fir
 connect ("failed to discover services"); the scripts then try once more by themselves. If a
 connect still fails, wait a few seconds, press the green button and try again.
 
+**Caution: Bluetooth on Linux can get flaky after broken connections** (the hub switched
+off mid-session, many reconnects in a row). BlueZ then keeps a stale connection to the hub,
+and new connects fail again and again, even from a fresh start. `journalctl -u bluetooth`
+shows `Device 00:16:53:... is already connected` / `No matching connection for device`.
+Older adapters (seen with a 2012 MacBook's Broadcom BCM20702) are hit hardest. Reset:
+
+```bash
+bluetoothctl disconnect 00:16:53:XX:XX:XX   # your hub's address
+bluetoothctl remove 00:16:53:XX:XX:XX
+sudo systemctl restart bluetooth
+```
+
+Then take the hub's batteries out for ~10 s, put them back, press the green button and
+run `uv run experiments/02_hub_info.py`. Still failing: reboot the computer.
+
 On Linux the address is the hub's **MAC address** (`00:16:53:…`), the same on every
 Linux/Windows machine.
