@@ -29,8 +29,11 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
     **Only the worker thread talks to the hub** (pylgbst allows one pending request).
   - `console.py`: `boost-console` (prompt_toolkit; plain line mode when stdin is not a TTY)
   - `sim.py`: pretend hub for `--simulate` and CI smoke tests
+  - `i18n.py`: English/German message tables, German colour words, umlaut normalising.
+    German words are always accepted; `lang` only picks the output language
 - `experiments/NN_name.py` — numbered adult experiments, one topic each
-- `kids/NN_name.py` — "missions" for a young programmer (see rules below)
+- `kids/NN_name.py` — "missions" for a young programmer (see rules below);
+  German copies in `kids/de/` using `Roboter` (German method names)
 - `tests/` — unit tests with fake hubs; CI runs them on macOS, Ubuntu, Windows
 - `windows/` — `.cmd` double-click launchers (CRLF via `.gitattributes`); one per kids mission
 - `docs/` — per-OS setup, hardware notes, troubleshooting, workflow
@@ -51,7 +54,8 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
   CoreBluetooth UUID on macOS (`BOOST_HUB_ADDRESS` env var).
 - **Printed text is ASCII-only** (Windows code pages); `tests/test_portability.py` checks it.
 - **Kids track:** short scripts (< 30 lines), only `lego_boost.kid.Robot`, a comment header
-  with "Mission", "How to run", "Try this". No advanced Python (no lambdas, classes, async).
+  with "Mission", "How to run", "Try this" (German: `Roboter`, "So startest du",
+  "Probier mal"; new or changed missions go into both languages, each with a launcher). No advanced Python (no lambdas, classes, async).
 - New experiment: next free number, docstring with purpose / run command / hardware needs.
   Add a unit test when you add logic to `src/lego_boost/`.
 

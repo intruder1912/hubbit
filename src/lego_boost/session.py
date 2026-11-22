@@ -30,7 +30,8 @@ import time
 from collections.abc import Callable
 
 from lego_boost import kid
-from lego_boost.commands import RAW, SIMPLE, Command, ParseError, help_text, parse
+from lego_boost.commands import BY_NAME, RAW, SIMPLE, Command, ParseError, help_text, parse
+from lego_boost.i18n import EN, color_word, lang_from_word, t
 
 log = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ class Session:
         connect: Callable[[], kid.Robot],
         output: Callable[[str], None] = print,
         grace: float = GRACE_SECONDS,
+        lang: str = EN,
     ):
         self._connect = connect
         self._output = output
@@ -75,6 +77,7 @@ class Session:
         self.state = NOT_OPEN
         self.last_color: str | None = None
         self.last_battery: float | None = None
+        self.lang = lang  # language of messages ("en" / "de"); input accepts both
 
     # --- lifecycle ----------------------------------------------------------
     def open(self) -> None:
@@ -116,7 +119,7 @@ class Session:
         """Handle one typed line. Returns False when the session should end."""
         self.check()
         try:
-            cmd = parse(line, self.mode)
+            cmd = parse(line, self.mode, self.lang)
         except ParseError as err:
             self._say(str(err))
             return True
@@ -127,17 +130,18 @@ class Session:
             return False
         if cmd.name == "help":
             try:
-                self._say(help_text(self.mode, cmd.args[0]))
+                self._say(help_text(self.mode, cmd.args[0], self.lang))
             except ParseError as err:
                 self._say(str(err))
         elif cmd.name in (RAW, SIMPLE):
             self.mode = cmd.name
-            self._say(f"{cmd.name.capitalize()} mode. Type 'help' to see the commands.")
+            self._say(self._t(f"mode_{cmd.name}"))
+        elif cmd.name == "language":
+            self._set_language(cmd.args[0])
         elif cmd.name == "reconnect":
             self._do_reconnect()
         elif self.state != CONNECTED:
-            self._say("The robot is not connected. Type 'reconnect' (press the green button) "
-                      "or 'exit'.")  # fmt: skip
+            self._say(self._t("not_connected"))
         elif cmd.name == "stop":
             self.stop()
         else:
@@ -176,7 +180,7 @@ class Session:
         if self.state == CONNECTED and worker is not None:
             stuck = worker.deadline is not None and time.monotonic() > worker.deadline
             if stuck or not self.robot.is_connected():
-                self._lost("The hub stopped answering." if stuck else "Lost the hub.")
+                self._lost(self._t("hub_stuck" if stuck else "hub_lost"))
         return self.state
 
     def busy(self) -> bool:
@@ -199,17 +203,31 @@ class Session:
             self._worker.wake.set()
         self._worker = None  # a stuck worker is left behind (daemon thread)
         self.state = DISCONNECTED
-        self._say(f"{why} Press the green button, then type 'reconnect' (or 'exit').")
+        self._say(self._t("press_reconnect", why=why))
 
     def _do_reconnect(self) -> None:
-        self._say("Connecting ... press the green button on the hub.")
+        self._say(self._t("connecting"))
         try:
             self.reconnect()
         except Exception as exc:  # noqa: BLE001 - stay in the console
             self.state = DISCONNECTED
-            self._say(f"Could not connect: {exc}")
+            self._say(self._t("could_not_connect", error=exc))
             return
-        self._say("Connected again!")
+        self._say(self._t("connected_again"))
+
+    def _set_language(self, word: str) -> None:
+        if word:
+            lang = lang_from_word(word)
+            if lang is None:
+                self._say(self._t("language_unknown"))
+                return
+            self.lang = lang
+            if self.robot is not None:
+                self.robot.lang = lang
+        self._say(self._t("language_now"))
+
+    def _t(self, key: str, **values) -> str:
+        return t(self.lang, key, **values)
 
     def _say(self, text: str) -> None:
         self._output(text)
@@ -232,7 +250,8 @@ class Session:
             except Exception as exc:  # noqa: BLE001 - one bad command must not end the session
                 log.debug("command %s failed", cmd, exc_info=True)
                 if self._worker is worker and self.robot.is_connected():
-                    self._say(f"Oops, '{cmd.name}' did not work: {exc}")
+                    name = BY_NAME[cmd.name].shown(self.lang)
+                    self._say(self._t("oops", name=name, error=exc))
             finally:
                 worker.deadline = None
                 with self._lock:
@@ -296,7 +315,7 @@ class Session:
         speed, turn = kid._speed(kid.DEFAULT_SPEED), kid._speed(kid.TURN_SPEED)
         if name == "stop":
             robot.stop()
-            return "Stopped."
+            return self._t("stopped")
         if name == "forward":
             self._timed(robot.hub.motor_AB, args[0], speed, speed, gen, w)
         elif name == "back":
@@ -309,10 +328,12 @@ class Session:
             robot.light(args[0])
         elif name == "color":
             self.last_color = robot.see_color()
-            return f"I see: {self.last_color}"
+            return self._t("i_see", color=color_word(self.last_color, self.lang))
         elif name == "distance":
             distance = robot.distance()
-            return "Nothing in front of me." if distance is None else f"Distance: {distance}"
+            if distance is None:
+                return self._t("nothing_in_front")
+            return self._t("distance", distance=distance)
         elif name == "motor":
             port, percent, seconds = args
             s = kid._speed(percent)
@@ -327,15 +348,20 @@ class Session:
                 motor.stop()
         elif name == "battery":
             self.last_battery = robot.battery()
-            return "Battery: unknown" if self.last_battery is None else (
-                f"Battery: {self.last_battery:.2f} V")  # fmt: skip
+            if self.last_battery is None:
+                return self._t("battery_unknown")
+            return self._t("battery", volts=self.last_battery)
         elif name == "sensors":
             self.last_color = robot.see_color()
             self.last_battery = robot.battery()
-            return (f"color={self.last_color} distance={robot.distance()} "
-                    f"battery={self.last_battery} V")  # fmt: skip
+            color = color_word(self.last_color, self.lang)
+            return self._t(
+                "sensors", color=color, distance=robot.distance(), volts=self.last_battery
+            )
         elif name == "hub":
             devices = getattr(robot.hub, "peripherals", {}) or {}
             rows = [f"  port 0x{port:02x}: {dev}" for port, dev in sorted(devices.items())]
-            return "\n".join(["Hub devices:", *rows]) if rows else "No device list available."
+            if not rows:
+                return self._t("no_devices")
+            return "\n".join([self._t("hub_devices"), *rows])
         return None
