@@ -134,6 +134,20 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 - **Stale vision reading:** at TUI start one `VisionSensor` value from before the mode
   switch (1 byte `ff`) was decoded with the 4-byte layout → `AssertionError` traceback in
   the TUI log. Harmless (one reading lost), now dropped quietly by `patch_pylgbst()`.
+- **Flaky after many reconnects (retest after the fixes above).** Laptop adapter: Apple
+  Broadcom BCM20702B0 (`05ac:8289`, Bluetooth 4.0, ~2012 MacBook); BlueZ 5.87, kernel
+  7.2.15. After repeated hub switch-offs and reconnects, connects failed more and more, even
+  from a fresh `boost-console` ("failed to discover services", "Service Discovery has not
+  been performed yet"). Once `MoveHub()` returned with all devices `None` and `Robot`
+  crashed on `led.set_color`. `journalctl -u bluetooth` shows why: 30+ pairs of
+  `Device 00:16:53:C2:96:F3 is already connected` / `No matching connection for device`.
+  BlueZ kept a stale connection to a hub that was gone. `GAS PPCP: Invalid Connection
+  Parameters` lines are harmless. The reset steps in `docs/setup-linux.md` (remove device,
+  restart bluetooth, hub batteries out) fixed it: `02_hub_info` and a normal connect worked
+  again. Not fixed in code: clearing BlueZ state would need Linux-only D-Bus calls. Now
+  `connect()` treats a hub without motors/LED as a failed connect, gives up as soon as
+  pylgbst's BLE thread dies, always closes half-set-up connections, asks for a fresh green
+  button press before the retry and points Linux users to the reset steps.
 
 ## Platform log
 
@@ -145,6 +159,6 @@ Record what was verified on real hardware.
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ `boost-scan --save` + saved address, session core timing, `boost-tui` (hold-to-drive, sensor panel, tilt) |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ kids missions 1–5 (EN + DE 3, 4, 5), colour debounce with LEGO bricks |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ hw-2: `BOOST_TRIM`, degree turns (recalibrated), raw mode, German console, stop, reconnect |
-| 2026-11-22 | Kali Linux (bare metal), BlueZ | 3.12 / 3.1.0 | ✅ setup, 02, 03, mission 3, console, TUI; reconnect needed a retry (fixed), TUI hang after quick restart (fixed); retest pending |
+| 2026-11-22 | Kali Linux (bare metal), BlueZ | 3.12 / 3.1.0 | ✅ setup, 02, 03, mission 3, console, TUI; reconnect needed a retry (fixed), TUI hang after quick restart (fixed); repeated reconnects flaky (stale BlueZ state, old BCM20702 adapter; reset steps in setup-linux.md) |
 | | Ubuntu / Raspberry Pi OS | | pending |
 | | Windows | | pending |

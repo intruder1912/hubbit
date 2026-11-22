@@ -187,7 +187,7 @@ def test_connect_gives_up_when_the_hub_never_answers(monkeypatch):
 
 
 def test_connect_tries_once_more_after_a_failed_setup(monkeypatch, capsys):
-    hub = object()
+    hub = _hub_with()
     connections, scans = _fake_pylgbst(monkeypatch, RuntimeError("threads not functioning"), hub)
     assert hub_mod.connect() is hub
     assert len(scans) == 2 and connections[0].disconnects == 1
@@ -244,3 +244,65 @@ def test_patch_pylgbst_drops_a_stale_vision_reading():
     good.port, good.payload = 3, bytes([9, 4, 0, 0])
     sensor._handle_port_data(good)
     assert seen == [(9, 4.0)]
+
+
+def _hub_with(**devices):
+    hub = SimpleNamespace(motor_A=object(), motor_B=object(), motor_AB=object(), led=object())
+    for name, value in devices.items():
+        setattr(hub, name, value)
+    return hub
+
+
+def test_connect_treats_a_hub_without_devices_as_failed(monkeypatch):
+    # Kali: MoveHub() returned with all devices None -> 'NoneType' has no 'set_color'
+    good = _hub_with()
+    connections, scans = _fake_pylgbst(monkeypatch, _hub_with(motor_AB=None, led=None), good)
+    assert hub_mod.connect() is good
+    assert len(scans) == 2
+    assert connections[0].disconnects == 1  # the half-set-up connection is closed
+
+
+def test_connect_reports_missing_devices_twice(monkeypatch):
+    _fake_pylgbst(monkeypatch, _hub_with(led=None), _hub_with(led=None))
+    with pytest.raises(hub_mod.HubConnectError, match="led"):
+        hub_mod.connect()
+
+
+def test_connect_gives_up_early_when_the_bluetooth_thread_dies(monkeypatch):
+    import threading
+
+    connections, _ = _fake_pylgbst(monkeypatch, "hang", _hub_with())
+    monkeypatch.setattr(hub_mod, "CONNECT_TIMEOUT", 10.0)
+    real_connection = __import__("pylgbst").get_connection_bleak
+
+    def dying_connection(**kw):
+        conn = real_connection(**kw)
+        alive = threading.Event()
+        alive.set()
+        conn.is_alive = alive.is_set
+        threading.Timer(0.3, alive.clear).start()  # the BLE thread ends after 0.3 s
+        return conn
+
+    monkeypatch.setattr(__import__("pylgbst"), "get_connection_bleak", dying_connection)
+    start = time.monotonic()
+    hub_mod.connect()  # the retry succeeds
+    assert time.monotonic() - start < 3  # not the full CONNECT_TIMEOUT
+    assert connections[0].disconnects == 1
+
+
+def test_retry_asks_for_a_fresh_button_press(monkeypatch, capsys):
+    _fake_pylgbst(monkeypatch, RuntimeError("first"), _hub_with())
+    hub_mod.connect()
+    assert "green button again" in capsys.readouterr().out
+
+
+def test_linux_errors_point_to_the_reset_steps(monkeypatch):
+    monkeypatch.setattr(hub_mod.sys, "platform", "linux")
+    _fake_pylgbst(monkeypatch, RuntimeError("first"), RuntimeError("second"))
+    with pytest.raises(hub_mod.HubConnectError, match="setup-linux.md"):
+        hub_mod.connect()
+    monkeypatch.setattr(hub_mod.sys, "platform", "darwin")
+    _fake_pylgbst(monkeypatch, RuntimeError("first"), RuntimeError("second"))
+    with pytest.raises(hub_mod.HubConnectError) as err:
+        hub_mod.connect()
+    assert "setup-linux" not in str(err.value)
