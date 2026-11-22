@@ -62,7 +62,8 @@ label/repo changes, and denies force pushes and pushes to `main`. In the sandbox
 `gh` and the hardware commands (`boost-scan`, `boost-console`, `experiments/`, `kids/`) run
 outside it (`excludedCommands`: gh fails TLS checks inside, Bluetooth is unavailable inside);
 PyPI and GitHub hosts are allowed. An exclusion only applies when **every** part of a command
-matches: run `gh ...` on its own, without `cd ... &&`, pipes or redirects.
+matches: run `gh ...` on its own, without `cd ... &&`, pipes or redirects. Push branches with
+`git push origin <branch>` (no `-u`: the sandbox write-protects `.git/config`).
 
 ## Workflow
 
