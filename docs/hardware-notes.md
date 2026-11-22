@@ -110,6 +110,9 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   Blue was lost to a BLACK reading. No more flicker between bricks.
 - Mission 4 (EN + DE) now skips "black" like "nothing" (BLACK mostly means too dark / too
   far). Run 2: `RED`, `BLUE`, `YELLOW`, all three right. Good enough, no further tuning.
+  The hub light followed each brick colour, no flicker.
+- Mission 5 (remote control, EN + DE) in the user's own terminal: w/a/s/d/q and the
+  unknown-letter reply all as expected; tapped turns (0.3 s, ~60 deg) feel fine for steering.
 
 ## Platform log
 
@@ -119,6 +122,7 @@ Record what was verified on real hardware.
 |---|---|---|---|
 | 2026-11-21 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ scan, 02 info, 03 LED, 04 motors, 05 vision+tilt (with `patch_pylgbst`); button untested |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ `boost-scan --save` + saved address, session core timing, `boost-tui` (hold-to-drive, sensor panel, tilt) |
+| 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ kids missions 1–5 (EN + DE 3, 4, 5), colour debounce with LEGO bricks |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ hw-2: `BOOST_TRIM`, degree turns (recalibrated), raw mode, German console, stop, reconnect |
 | | Ubuntu / Kali / Raspberry Pi OS | | pending |
 | | Windows | | pending |
