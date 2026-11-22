@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import time
 
-from lego_boost.hub import connect, safe_shutdown
+from lego_boost.hub import connect, link_alive, safe_shutdown
 
 COLORS = {
     "off": 0x00,
@@ -43,6 +43,11 @@ QUARTER_TURN_SECONDS = 0.38
 
 def _speed(percent: float) -> float:
     return max(-100.0, min(100.0, percent)) / 100.0
+
+
+def turn_seconds(degrees: float) -> float:
+    """Seconds of turning on the spot for about `degrees` (linear guess from the calibration)."""
+    return QUARTER_TURN_SECONDS * abs(degrees) / 90.0
 
 
 class Robot:
@@ -80,12 +85,32 @@ class Robot:
     def backward(self, seconds: float = 1, speed: float = DEFAULT_SPEED) -> None:
         self.hub.motor_AB.timed(seconds, -_speed(speed), -_speed(speed))
 
-    def turn_left(self, seconds: float = QUARTER_TURN_SECONDS, speed: float = TURN_SPEED) -> None:
-        """Turn on the spot. With no number it is about a quarter turn (90 degrees)."""
+    def turn_left(
+        self,
+        seconds: float = QUARTER_TURN_SECONDS,
+        speed: float = TURN_SPEED,
+        degrees: float | None = None,
+    ) -> None:
+        """Turn on the spot. With no number it is about a quarter turn (90 degrees).
+
+        `robot.turn_left(degrees=45)` turns by an angle instead (approximate).
+        """
+        if degrees is not None:
+            seconds = turn_seconds(degrees)
         self.hub.motor_AB.timed(seconds, -_speed(speed), _speed(speed))
 
-    def turn_right(self, seconds: float = QUARTER_TURN_SECONDS, speed: float = TURN_SPEED) -> None:
-        """Turn on the spot. With no number it is about a quarter turn (90 degrees)."""
+    def turn_right(
+        self,
+        seconds: float = QUARTER_TURN_SECONDS,
+        speed: float = TURN_SPEED,
+        degrees: float | None = None,
+    ) -> None:
+        """Turn on the spot. With no number it is about a quarter turn (90 degrees).
+
+        `robot.turn_right(degrees=45)` turns by an angle instead (approximate).
+        """
+        if degrees is not None:
+            seconds = turn_seconds(degrees)
         self.hub.motor_AB.timed(seconds, _speed(speed), -_speed(speed))
 
     def spin_motor(self, degrees: float = 360, speed: float = DEFAULT_SPEED) -> None:
@@ -126,6 +151,21 @@ class Robot:
         if not self._ensure_sensor():
             return None
         return self._last_distance
+
+    # --- hub --------------------------------------------------------------
+    def battery(self) -> float | None:
+        """Battery voltage in volts (6 fresh AAA cells: about 9 V), or None if unknown."""
+        voltage = getattr(self.hub, "voltage", None)
+        if voltage is None:
+            return None
+        try:
+            return round(float(voltage.voltage), 2)
+        except Exception:  # noqa: BLE001 - a missing reading must not stop the robot
+            return None
+
+    def is_connected(self) -> bool:
+        """True while the Bluetooth link to the hub is working."""
+        return self.hub is not None and link_alive(self.hub)
 
     # --- misc -------------------------------------------------------------
     @staticmethod

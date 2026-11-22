@@ -105,3 +105,12 @@ def test_patch_pylgbst_hub_action_ignores_other_messages():
     request = MsgHubAction(MsgHubAction.DISCONNECT)
     assert not request.is_reply(MsgPortValueSingle.__new__(MsgPortValueSingle))
     assert request.is_reply(MsgHubAction(MsgHubAction.UPSTREAM_DISCONNECT))
+
+
+def test_safe_shutdown_skips_the_hub_when_the_link_is_gone():
+    fake = FakeHub(hang_on_disconnect=True)
+    fake.connection.is_alive = lambda: False
+    start = time.monotonic()
+    hub_mod.safe_shutdown(fake, timeout=2)
+    assert time.monotonic() - start < 0.5  # no waiting for a dead hub
+    assert not fake.motor_AB.stopped and fake.connection.closed

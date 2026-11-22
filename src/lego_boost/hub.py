@@ -99,8 +99,33 @@ def _run_with_timeout(fn, timeout: float) -> None:
         log.warning("%s did not finish within %.1fs", getattr(fn, "__name__", fn), timeout)
 
 
+def link_alive(hub) -> bool:
+    """False once pylgbst's BLE threads have died (the hub was lost).
+
+    pylgbst only notices a lost link when a write fails, so a fresh drop can still read True.
+    Connections without `is_alive()` (fakes, other backends) count as alive.
+    """
+    is_alive = getattr(hub.connection, "is_alive", None)
+    if is_alive is None:
+        return True
+    try:
+        return bool(is_alive())
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def safe_shutdown(hub, timeout: float = 3.0) -> None:
-    """Stop all motors and disconnect. Never raises."""
+    """Stop all motors and disconnect. Never raises.
+
+    If the link is already gone, skip talking to the hub (it would only time out).
+    """
+    if not link_alive(hub):
+        log.info("Hub link already lost; closing the connection only")
+        try:
+            hub.connection.disconnect()
+        except Exception as exc:  # noqa: BLE001
+            log.debug("connection.disconnect failed: %s", exc)
+        return
 
     def stop_motors() -> None:
         for name in ("motor_AB", "motor_A", "motor_B", "motor_external"):
