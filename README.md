@@ -84,6 +84,19 @@ once; `help` lists all commands; Tab completes words; Up arrow repeats earlier c
 If the hub gets lost, the console says so: press the green button and type `reconnect`.
 On Windows, double-click `windows\console.cmd` (or `console-practice.cmd` for the simulation).
 
+## Button window: drive with the mouse and arrow keys
+
+```bash
+uv run boost-tui                  # or: --simulate (no hub), --lang de (German)
+```
+
+A full-screen window on the same session as the console: big buttons for driving and the
+light colours, "What color?" / "How far?", a log, and a command line at the bottom that
+takes every console command (also `raw`). Arrow keys drive in short steps: hold a key to
+keep going, let go and the robot stops within ~0.3 s. Space, Escape or the STOP button stop
+at once; Ctrl+Q closes the window (and stops the motors). On Windows: `windows\tui.cmd`,
+`tui-practice.cmd` (simulation), `tui-deutsch.cmd`. It looks best in Windows Terminal.
+
 ## Auf Deutsch
 
 German words always work in the console, with or without umlauts (`vor 2`, `zurück`,
@@ -138,6 +151,8 @@ This project stands on the work of others:
   Bluetooth LE.
 - [prompt_toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) by Jonathan Slenders
   and contributors (BSD-3-Clause): the interactive `boost-console` prompt.
+- [Textual](https://github.com/Textualize/textual) by Textualize and contributors (MIT): the
+  full-screen `boost-tui` window.
 - [BOOSTreveng](https://github.com/JorgePe/BOOSTreveng) by Jorge Pereira (MIT) and LEGO's
   [wireless protocol documentation](https://github.com/LEGO/lego-ble-wireless-protocol-docs):
   protocol references.
