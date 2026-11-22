@@ -35,6 +35,8 @@ Per-OS Bluetooth notes: [macOS](docs/setup-macos.md) · [Linux](docs/setup-linux
   header with "Mission", "How to run", "Try this", and no advanced Python (no classes, lambdas,
   async).
 - New logic in `src/lego_boost/` comes with a unit test (fake hubs, see `tests/`).
+- GitHub Actions are pinned to commit SHAs (with the version as a comment); Dependabot
+  updates them. Please keep new actions pinned the same way.
 - pylgbst is pinned to a git commit on purpose (see `pyproject.toml`). Please don't change it
   in an unrelated PR.
 
