@@ -43,7 +43,10 @@ Per-OS Bluetooth notes: [macOS](docs/setup-macos.md) · [Linux](docs/setup-linux
 ## Pull requests
 
 1. Fork, create a branch (`NN-short-name`, with `NN` = issue number).
-2. Keep the PR focused on one thing; reference the issue (`Closes #NN`).
+2. Keep the PR focused on one thing; reference the issue (`Closes #NN`). The **PR title**
+   follows [Conventional Commits](https://www.conventionalcommits.org/), e.g.
+   `fix(tui): stop hangs on quit` (it becomes the commit on `main` and the changelog line;
+   see `docs/releasing.md`).
 3. Run `uv run ruff check . && uv run ruff format --check . && uv run pytest` locally.
 4. CI must pass on macOS, Ubuntu and Windows. For first-time contributors, the maintainer
    has to approve the CI run first, so don't worry if it waits.

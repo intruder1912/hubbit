@@ -91,7 +91,8 @@ Work is tracked in GitHub issues (`gh issue list`). Record hardware findings (wh
 which OS) in `docs/hardware-notes.md`. Run `uv run ruff check . && uv run pytest` before committing.
 
 **`main` is protected — never commit or push to it directly.** For each issue: branch
-`NN-short-name` → commit (`Closes #N`) → push → `gh pr create`. Wait for CI on all three OSes;
+`NN-short-name` → commit (`Closes #N`) → push → `gh pr create` with a **Conventional Commits
+PR title** (`feat(tui): ...`, `fix(hub): ...`; required check, see `docs/releasing.md`). Wait for CI on all three OSes;
 when green, Claude merges its own PR (`gh pr merge --squash --delete-branch --admin`) and tells
 the user. Outside PRs: review only, never merge them without the user's go-ahead.
 New issues are triaged per `docs/triage.md` (labels: one type + area, remove `needs-triage`).
