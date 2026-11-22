@@ -60,6 +60,8 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 - **Cross-platform:** no OS-specific paths/shell tricks in Python code; keep bleak as the
   only backend unless an issue says otherwise. Hub address = MAC on Linux/Windows,
   CoreBluetooth UUID on macOS (`BOOST_HUB_ADDRESS` env var).
+- **No real hub addresses** (MAC / CoreBluetooth UUID) in committed files, issues or PRs:
+  write `00:16:53:XX:XX:XX`. They identify a device in the user's home.
 - **Printed text is ASCII-only** (Windows code pages); `tests/test_portability.py` checks it.
 - **Kids track:** short scripts (< 30 lines), only `lego_boost.kid.Robot`, a comment header
   with "Mission", "How to run", "Try this" (German: `Roboter`, "So startest du",

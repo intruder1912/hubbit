@@ -142,7 +142,7 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   from a fresh `boost-console` ("failed to discover services", "Service Discovery has not
   been performed yet"). Once `MoveHub()` returned with all devices `None` and `Robot`
   crashed on `led.set_color`. `journalctl -u bluetooth` shows why: 30+ pairs of
-  `Device 00:16:53:C2:96:F3 is already connected` / `No matching connection for device`.
+  `Device 00:16:53:XX:XX:XX is already connected` / `No matching connection for device`.
   BlueZ kept a stale connection to a hub that was gone. `GAS PPCP: Invalid Connection
   Parameters` lines are harmless. The reset steps in `docs/setup-linux.md` (remove device,
   restart bluetooth, hub batteries out) fixed it: `02_hub_info` and a normal connect worked
