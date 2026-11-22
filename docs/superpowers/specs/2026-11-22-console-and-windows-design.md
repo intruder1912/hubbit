@@ -84,6 +84,12 @@ boost-console (prompt_toolkit UI)       later: boost-tui (textual UI)
 - **Executor.** Commands go into a queue and are run by a single worker thread, one at a time.
   `stop` empties the queue and calls `Robot.stop()` straight from the UI thread. `exit` = stop +
   close the session. Errors in a command are printed and the console keeps running.
+- **Implementation note (batch 5).** pylgbst allows only one pending request, so only the
+  worker thread talks to the hub. `stop` from the UI thread just cancels and wakes the worker,
+  which stops the motors itself. Moves start with `wait_complete=False` and are waited for in
+  0.05 s steps. A per-command watchdog (expected duration + 5 s) marks the hub as lost, because
+  `is_alive()` only turns False after a failed write. Lives in `lego_boost/commands.py` (parser)
+  and `lego_boost/session.py` (session + worker).
 - **Session.** It connects once at start (with the usual "press the green button" hint). Before each
   command it checks `hub.connection.is_alive()`. If the link is gone it prints a clear message and
   only accepts `reconnect` / `exit`. Disconnect happens only on `exit`, on Ctrl+C or Ctrl+D, or

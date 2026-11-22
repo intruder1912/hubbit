@@ -23,6 +23,9 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
   - `scan.py`: own BLE scan **with timeout** (pylgbst's discovery blocks forever)
   - `hub.py`: `connect()`, `boost()` context manager, `safe_shutdown()` (stops motors, times out)
   - `kid.py`: `Robot` — simplified API for the kids track (colors by name, speeds in %)
+  - `commands.py`: text command parser for the console (aliases, limits, help) — pure logic
+  - `session.py`: long-running console session — worker thread, `stop`, watchdog, reconnect.
+    **Only the worker thread talks to the hub** (pylgbst allows one pending request).
 - `experiments/NN_name.py` — numbered adult experiments, one topic each
 - `kids/NN_name.py` — "missions" for a young programmer (see rules below)
 - `tests/` — unit tests with fake hubs; CI runs them on macOS, Ubuntu, Windows

@@ -24,6 +24,13 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   functioning". Fixed by `lego_boost.hub.patch_pylgbst()` (drops the kwarg).
 - **`MsgHubAction.is_reply` raises `TypeError`** on any other message instead of returning False;
   a sensor value arriving during `hub.disconnect()` kills the processing thread. Same patch.
+- **One pending request at a time:** `hub.send()` asserts there is no outstanding sync
+  request. Two threads sending commands (e.g. `motor.stop()` from the UI thread while another
+  thread waits in `timed()`) raise `AssertionError`. `lego_boost.session` therefore sends
+  everything from one worker thread and starts moves with `wait_complete=False`.
+- **Lost link detection:** `BleakConnection.is_alive()` is a no-op; use
+  `hub.connection.is_alive()` (the `BleakDriver`, checks pylgbst's two threads). It only turns
+  False after a write fails, so the session also uses a per-command watchdog.
 - Tilt sensor default mode (`MODE_3AXIS_SIMPLE`) only reports when the face pointing up changes
   (values 0–5 = BACK, UP, DOWN, LEFT, RIGHT, FRONT); small tilts are silent.
 
