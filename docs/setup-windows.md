@@ -44,7 +44,11 @@ at the end ("Press any key ...") so the output can be read. Press the hub's gree
 `exit`, so there is no need to press the green button again for every command.
 `console-practice.cmd` runs the same console without a hub (`--simulate`).
 
-German: `mission-N-de-*.cmd` run the German missions in `kids\de\`; `console-deutsch.cmd`
+`tui.cmd` opens the button window (`boost-tui`: big buttons, arrow keys, STOP), and
+`tui-practice.cmd` runs it without a hub. It looks best in **Windows Terminal** (default on
+Windows 11); the old console window works but with plainer colours.
+
+German: `mission-N-de-*.cmd`, `tui-deutsch.cmd` run the German missions in `kids\de\`; `console-deutsch.cmd`
 and `console-ueben.cmd` (no hub) start the console with German messages (`--lang de`).
 To make German the default everywhere, set the user environment variable `BOOST_LANG=de`.
 
