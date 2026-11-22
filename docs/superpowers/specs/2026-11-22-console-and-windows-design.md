@@ -6,17 +6,17 @@ Date: 2026-11-22 · Status: proposed · Roadmap: #8
 
 The hub is out of reach for now, so this batch prepares the work that needs no hardware:
 
-1. **Windows readiness.** The son's notebook runs Windows, and #4 (hardware check there) should
+1. **Windows readiness.** The kids notebook runs Windows, and #4 (hardware check there) should
    be a short, boring session with nothing left to fix on the spot.
 2. **Interactive console.** The robot is driven by typed commands in one long session. It
-   connects once and disconnects only on `exit` (or Ctrl+C). It is mainly **for the son**: simple
+   connects once and disconnects only on `exit` (or Ctrl+C). It is mainly **for young programmers**: simple
    words, forgiving input, helpful errors. It also has a **raw mode** for the adult
    (direct motor/sensor access for experimenting).
 
 ## Goals
 
 - One command `uv run boost-console` that works the same on macOS, Linux and Windows.
-- Simple vocabulary for the son: `forward [s]`, `back [s]`, `left [deg]`, `right [deg]`,
+- Simple vocabulary for kids: `forward [s]`, `back [s]`, `left [deg]`, `right [deg]`,
   `led <color>`, `color`, `distance`, `stop`, `help`, `exit`.
 - Raw mode (`raw` / `simple` to toggle) for the adult: per-port motor commands, angled moves,
   sensor dump, battery.
@@ -109,7 +109,7 @@ boost-console (prompt_toolkit UI)       later: boost-tui (textual UI)
 - `docs/setup-windows.md`: Thonny setup (Tools → Options → Interpreter → `.venv\Scripts\python.exe`)
   and VS Code. Add a `boost-console` section and a checklist for the #4 session, in order.
 - Double-click launchers in `windows/`: `console.cmd` (runs `uv run boost-console`, then `pause`)
-  so the son doesn't need a terminal.
+  so kids don't need a terminal.
 
 ### BOOSTreveng
 

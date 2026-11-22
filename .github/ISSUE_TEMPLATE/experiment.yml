@@ -1,6 +1,6 @@
 name: Experiment
 description: A new experiment or kids mission
-labels: [experiment]
+labels: [experiment, needs-triage]
 body:
   - type: textarea
     id: goal

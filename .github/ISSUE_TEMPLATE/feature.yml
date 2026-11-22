@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest an improvement or a new command / tool
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The goal or problem, in your own words.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea for a solution
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [kids track, console / TUI, experiments, helpers (src/lego_boost), docs, CI / tooling, not sure]

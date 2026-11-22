@@ -1,18 +1,29 @@
-name: Bug / hardware problem
-description: Something doesn't work (connection, platform, script)
-labels: [bug]
+name: Bug
+description: Something doesn't work (connection, script, docs)
+labels: [bug, needs-triage]
 body:
   - type: dropdown
     id: platform
     attributes:
       label: Platform
-      options: [macOS, Ubuntu, Kali, Raspberry Pi OS, Windows, other]
+      options: [macOS, Ubuntu, Kali, Raspberry Pi OS, other Linux, Windows, other]
     validations:
       required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `uv run python -V` and the commit (`git rev-parse --short HEAD`)
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: Command run, output / traceback, what you expected.
+      description: Command you ran, the output / traceback, and what you expected instead.
+      render: text
     validations:
       required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware
+      description: Hub (Move Hub 88006?), model build, what is plugged into ports C/D.

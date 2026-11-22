@@ -39,7 +39,7 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 
 ## Kids track calibration (2026-11-21, Mac session, hard floor)
 
-- `Robot` drive speed 35% (50% felt too fast for a child); ~35 cm per `forward(1)`.
+- `Robot` drive speed 35% (50% felt too fast for young drivers); ~35 cm per `forward(1)`.
 - Turn on the spot at 50%: 0.35 s ≈ 79°, 0.5 s ≈ 130° (not linear, motors ramp up).
   `QUARTER_TURN_SECONDS = 0.38` → mission 3 drives a closed square. Re-check on carpet
   or with weak batteries.
