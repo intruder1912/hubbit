@@ -57,8 +57,8 @@ def test_turn_by_degrees_and_hub_helpers():
     )
     robot.turn_left(degrees=45)
     robot.turn_right(degrees=180)
-    q = kid.QUARTER_TURN_SECONDS
-    assert [call[0] for call in robot.hub.motor_AB.calls] == [q / 2, q * 2]
+    seconds = [call[0] for call in robot.hub.motor_AB.calls]
+    assert seconds == [kid.turn_seconds(45), kid.turn_seconds(180)]
     assert robot.battery() == 7.46
     assert robot.is_connected()
     robot.hub.connection.is_alive = lambda: False
@@ -101,3 +101,27 @@ def test_robot_drives_with_trim(monkeypatch):
     calls = [x for call in robot.hub.motor_AB.calls for x in call]
     assert calls == pytest.approx([1, 0.36, 0.4, 0.5, -0.36, 0.4])
     assert kid.Roboter().trim == 10  # German robot reads it too
+
+
+def test_turn_seconds_has_start_up_time():
+    from lego_boost import kid
+
+    # hardware measurements 2026-11-21/22 (Vernie, hard floor): seconds -> degrees
+    for seconds, degrees in [(0.19, 30), (0.35, 79), (0.38, 85), (0.5, 130), (0.76, 205)]:
+        assert kid.turn_seconds(degrees) == pytest.approx(seconds, abs=0.03)
+    assert kid.turn_seconds(0) == 0
+    assert kid.turn_seconds(-90) == kid.turn_seconds(90)
+    assert kid.QUARTER_TURN_SECONDS == pytest.approx(kid.turn_seconds(90), abs=0.01)
+
+
+def test_close_can_skip_the_goodbye(monkeypatch, capsys):
+    from lego_boost import kid
+
+    closed = []
+    monkeypatch.setattr(kid, "safe_shutdown", closed.append)
+    robot = Robot()
+    robot.hub = "hub"
+    robot.close(say_bye=False)
+    assert closed == ["hub"] and capsys.readouterr().out == ""
+    robot.__exit__(None, None, None)
+    assert "Bye" in capsys.readouterr().out

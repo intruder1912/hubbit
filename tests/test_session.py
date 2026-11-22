@@ -87,7 +87,7 @@ def test_turn_by_degrees_uses_calibration(make):
     session.handle("left 45")
     assert session.wait_idle(2)
     seconds = hubs[0].motor_AB.calls[0][1]
-    assert seconds == pytest.approx(kid.QUARTER_TURN_SECONDS / 2)
+    assert seconds == pytest.approx(kid.turn_seconds(45))
 
 
 def test_stop_interrupts_a_long_move_and_drops_the_queue(make):
@@ -138,7 +138,7 @@ def test_parse_errors_are_printed(make):
     assert "raw mode" in out[-1]
 
 
-def test_lost_link_only_allows_reconnect_or_exit(make):
+def test_lost_link_only_allows_reconnect_or_exit(make, capsys):
     session, hubs, out = make()
     hubs[0].alive = False
     session.handle("forward 1")
@@ -148,6 +148,7 @@ def test_lost_link_only_allows_reconnect_or_exit(make):
     session.handle("reconnect")
     assert session.state == CONNECTED and len(hubs) == 2
     assert hubs[0].closed  # old connection cleaned up
+    assert "Bye" not in capsys.readouterr().out  # reconnecting is not quitting
     session.handle("forward 0.1")
     assert session.wait_idle(2)
     assert len(hubs[1].motor_AB.calls) == 1

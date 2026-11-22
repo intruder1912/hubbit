@@ -123,3 +123,18 @@ def test_safe_shutdown_skips_the_hub_when_the_link_is_gone():
     hub_mod.safe_shutdown(fake, timeout=2)
     assert time.monotonic() - start < 0.5  # no waiting for a dead hub
     assert not fake.motor_AB.stopped and fake.connection.closed
+
+
+def test_unknown_peripheral_warning_is_filtered(caplog):
+    import logging
+
+    from lego_boost.hub import quiet_pylgbst_logs
+
+    quiet_pylgbst_logs()
+    quiet_pylgbst_logs()  # idempotent
+    logger = logging.getLogger("hub")
+    assert len(logger.filters) == 1
+    with caplog.at_level(logging.WARNING, logger="hub"):
+        logger.warning("Have no dedicated class for peripheral type 0x42 (UNKNOWN) on port 0x46")
+        logger.warning("something else")
+    assert [r.getMessage() for r in caplog.records] == ["something else"]
