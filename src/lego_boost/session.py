@@ -134,7 +134,7 @@ class Session:
             old.wake.set()
             old.queue.put(None)
         if self.robot is not None:
-            self.robot.__exit__(None, None, None)
+            self.robot.close(say_bye=False)  # no "Bye!": we connect again right away
             self.robot = None
         self.state = DISCONNECTED
         self.open()

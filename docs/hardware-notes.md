@@ -49,7 +49,7 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 - `Robot` drive speed 35% (50% felt too fast for young drivers); ~35 cm per `forward(1)`.
 - Turn on the spot at 50%: 0.35 s ≈ 79°, 0.5 s ≈ 130° (not linear, motors ramp up).
   `QUARTER_TURN_SECONDS = 0.38` → mission 3 drives a closed square. Re-check on carpet
-  or with weak batteries.
+  or with weak batteries. (Replaced 2026-11-22 by a start-up + rate model, see below.)
 - Each motor call adds ~0.28 s of BLE round trip (`forward(1)` takes ~1.29 s).
 - Colour sensor with non-LEGO items (green, red, neon orange): red ✓, green seen as
   BLUE/CYAN, orange likely as RED; BLACK appears between items. Retest with LEGO bricks.
@@ -72,7 +72,28 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   stops ~0.3 s after release, STOP waits until the key is let go; a tapped turn is one
   0.12 s pulse (small angle), holding turns continuously. Confirmed on the hub.
 - Drift: the **left motor is slightly faster** than the right, forwards and backwards, so
-  straight driving curves a little. Not corrected. Idea: a per-robot trim in `.env`.
+  straight driving curves a little. Fixed by `BOOST_TRIM` (#31), see hw-2 below.
+
+## Console session hw-2 (2026-11-22, Mac, Vernie, hard floor, #13)
+
+- **Trim:** `BOOST_TRIM=5` (left wheel 5% slower) → `forward 3` (~1 m) drifts about 2 cm or
+  less. Kept in the Mac's `.env`.
+- **Degree turns** (with trim 5, by eye): `left 90` ≈ 85°, `right 45` ≈ 30°, `left 180` ≈ 205°
+  with the old linear formula (0.38 s per 90°). Together with the 2026-11-21 points the
+  motors need ~0.1 s to get going, then turn ~310°/s: `turn_seconds = 0.1 + deg / 310`
+  (all five points within ~6°). Now `left 90` = 0.39 s, `right 45` = 0.25 s, `left 180` = 0.68 s.
+  Not yet re-measured with the new formula.
+- **Raw mode:** `battery` 7.38 V, `sensors` → `color=nothing distance=10.0 battery=7.37 V`;
+  `hub` lists motors on 0x00/0x01/0x02 (A, B, external), AB on 0x10, vision sensor 0x03,
+  LED 0x32, tilt 0x3a, current 0x3b, voltage 0x3c and an internal device on 0x46 (type 0x42,
+  pylgbst has no class; its connect-time warning is now filtered). `angle A 360 30` ran.
+  Two commands on one line (`motor A 30 1, motor B 30 1`) are rejected with a hint.
+- **German console:** `sprache deutsch`, `vor`, `zurueck`, `links 90`, `farbe` (nichts / rot),
+  `hilfe` all fine; the typo `zuruech` got "Meinst du 'zurueck'?".
+- **`stop`** stops at once.
+- **Reconnect:** hub switched off → "Lost the hub. Press the green button, then type
+  'reconnect'"; `reconnect` after a green-button press → "Connected again!". It printed a
+  stray "Robot stopped. Bye!" (now gone) and the 0x46 warning (now filtered).
 
 ## Platform log
 
@@ -82,5 +103,6 @@ Record what was verified on real hardware.
 |---|---|---|---|
 | 2026-11-21 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ scan, 02 info, 03 LED, 04 motors, 05 vision+tilt (with `patch_pylgbst`); button untested |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ `boost-scan --save` + saved address, session core timing, `boost-tui` (hold-to-drive, sensor panel, tilt) |
+| 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ hw-2: `BOOST_TRIM`, degree turns (recalibrated), raw mode, German console, stop, reconnect |
 | | Ubuntu / Kali / Raspberry Pi OS | | pending |
 | | Windows | | pending |

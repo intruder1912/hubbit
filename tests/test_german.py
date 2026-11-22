@@ -195,7 +195,9 @@ def test_roboter_german_aliases(capsys):
     assert motor.calls[0] == (2, 0.35, 0.35)
     assert motor.calls[1] == (1, -0.2, -0.2)
     assert motor.calls[2][1:] == (-0.5, 0.5)
-    assert motor.calls[3][0] == pytest.approx(0.19)
+    from lego_boost.kid import turn_seconds
+
+    assert motor.calls[3][0] == pytest.approx(turn_seconds(45))
     leds = []
     roboter.hub.led.set_color = leds.append
     roboter.licht("rot")

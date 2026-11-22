@@ -91,12 +91,30 @@ def patch_pylgbst() -> None:
         MsgHubAction.is_reply = is_reply
 
 
+class _QuietUnknownPeripheral(logging.Filter):
+    """Drop pylgbst's warning about the Move Hub's internal device on port 0x46 (type 0x42).
+
+    It shows up on every connect, means nothing for users and confuses kids.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "Have no dedicated class for peripheral" not in record.getMessage()
+
+
+def quiet_pylgbst_logs() -> None:
+    """Install the filter once on pylgbst's `hub` logger."""
+    logger = logging.getLogger("hub")
+    if not any(isinstance(f, _QuietUnknownPeripheral) for f in logger.filters):
+        logger.addFilter(_QuietUnknownPeripheral())
+
+
 def connect(address: str | None = None, timeout: float = 15.0):
     """Return a connected pylgbst MoveHub. Prefer the `boost()` context manager."""
     from pylgbst import get_connection_bleak
     from pylgbst.hub import MoveHub
 
     patch_pylgbst()
+    quiet_pylgbst_logs()
     addr = resolve_address(address, timeout)
     log.info("Connecting to %s", addr)
     conn = get_connection_bleak(hub_mac=addr, hub_name=MOVE_HUB_NAME)

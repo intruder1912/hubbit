@@ -47,9 +47,11 @@ COLOR_NAMES = {0x00: "black", 0xFF: "nothing"} | {v: k for k, v in COLORS.items(
 
 DEFAULT_SPEED = 35  # driving: ~35 cm per second on the test model (50% felt too fast)
 TURN_SPEED = 50  # turning on the spot
-# Calibrated 2026-11-21 on a hard floor at 50%: 0.35 s ~ 79 deg, 0.5 s ~ 130 deg
-# (not linear: the motors ramp up first). Interpolated: 0.38 s ~ 90 deg.
-QUARTER_TURN_SECONDS = 0.38
+# Turning at 50% on a hard floor (Vernie, 2026-11-21/22): the motors need ~0.1 s to get
+# going, then turn ~310 deg/s. Measured 0.19 s ~ 30, 0.35 s ~ 79, 0.38 s ~ 85,
+# 0.5 s ~ 130, 0.76 s ~ 205 deg - all within ~6 deg of this line.
+TURN_START_SECONDS = 0.1
+TURN_DEGREES_PER_SECOND = 310.0
 
 
 def _speed(percent: float) -> float:
@@ -89,8 +91,13 @@ def trimmed(left: float, right: float, trim: float) -> tuple[float, float]:
 
 
 def turn_seconds(degrees: float) -> float:
-    """Seconds of turning on the spot for about `degrees` (linear guess from the calibration)."""
-    return QUARTER_TURN_SECONDS * abs(degrees) / 90.0
+    """Seconds of turning on the spot for about `degrees` (start-up time + constant rate)."""
+    if not degrees:
+        return 0.0
+    return TURN_START_SECONDS + abs(degrees) / TURN_DEGREES_PER_SECOND
+
+
+QUARTER_TURN_SECONDS = round(turn_seconds(90), 2)  # 0.39 s
 
 
 class Robot:
@@ -115,9 +122,14 @@ class Robot:
         return self
 
     def __exit__(self, *exc) -> None:
+        self.close()
+
+    def close(self, say_bye: bool = True) -> None:
+        """Stop the motors and disconnect (what the end of `with Robot()` does)."""
         if self.hub is not None:
             safe_shutdown(self.hub)
-            print(self._t("robot_bye"))
+            if say_bye:
+                print(self._t("robot_bye"))
 
     # --- light ------------------------------------------------------------
     def light(self, color: str) -> None:
