@@ -167,7 +167,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "prompt-toolkit", specifier = ">=3.0" },
-    { name = "pylgbst", extras = ["bleak"], git = "https://github.com/undera/pylgbst?rev=71dfc630b54ba3a966e4b7a144344465a65dc138" },
+    { name = "pylgbst", extras = ["bleak"], git = "https://github.com/undera/pylgbst?rev=789a52e835ffc51920a8aa5a2011f7a919348a21" },
     { name = "textual", specifier = ">=8.2.8" },
 ]
 
@@ -290,7 +290,7 @@ wheels = [
 [[package]]
 name = "pylgbst"
 version = "1.3.0"
-source = { git = "https://github.com/undera/pylgbst?rev=71dfc630b54ba3a966e4b7a144344465a65dc138#71dfc630b54ba3a966e4b7a144344465a65dc138" }
+source = { git = "https://github.com/undera/pylgbst?rev=789a52e835ffc51920a8aa5a2011f7a919348a21#789a52e835ffc51920a8aa5a2011f7a919348a21" }
 
 [package.optional-dependencies]
 bleak = [
