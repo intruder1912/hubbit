@@ -36,7 +36,7 @@ OS-specific notes (Bluetooth permissions, BlueZ, etc.):
 | Folder | Content |
 |---|---|
 | `experiments/` | Numbered experiments: scan, hub info, LED, motors, sensors |
-| `kids/` | Simple "missions" for young programmers using a friendly `Robot` API |
+| `kids/` | Simple "missions" for young programmers using a friendly `Robot` API (German: `kids/de/`) |
 | `src/lego_boost/` | Helpers: scan with timeout, safe connect/disconnect, kid API |
 | `docs/` | Setup per OS, hardware notes, troubleshooting, workflow |
 | `windows/` | Double-click launchers for the kids missions on Windows |
@@ -83,6 +83,35 @@ The hub stays connected until `exit` (or Ctrl+C / Ctrl+D). `stop` stops the moto
 once; `help` lists all commands; Tab completes words; Up arrow repeats earlier commands.
 If the hub gets lost, the console says so: press the green button and type `reconnect`.
 On Windows, double-click `windows\console.cmd` (or `console-practice.cmd` for the simulation).
+
+## Auf Deutsch
+
+German words always work in the console, with or without umlauts (`vor 2`, `zurück`,
+`dreh links 45`, `licht rot`, `grün`, `farbe`, `stopp`, `hilfe`, `ende`; raw: `winkel`,
+`sensoren`, `batterie`). For German messages and help start it with `--lang de` (or set
+`BOOST_LANG=de`), or type `sprache deutsch` inside (`language english` switches back).
+
+```text
+$ uv run boost-console --lang de
+roboter> vor 2
+roboter> farbe
+Ich sehe: gruen
+```
+
+Die Missionen gibt es auch auf Deutsch in `kids/de/`, mit dem deutschen `Roboter`:
+
+```python
+from lego_boost.kid import Roboter
+
+with Roboter() as roboter:
+    roboter.licht("blau")  # rot, gruen, gelb, lila, weiss, aus, ...
+    roboter.vorwaerts(2)  # auch: rueckwaerts(), links(), rechts(), warte(1)
+    print(roboter.farbe())  # z.B. "gruen" (auch: abstand(), batterie())
+```
+
+Windows: `windows\mission-1-de-hallo-licht.cmd` ... `mission-5-de-fernsteuerung.cmd`,
+`console-deutsch.cmd` und `console-ueben.cmd` (ohne Roboter). Printed German text uses
+ae/oe/ue/ss instead of umlauts, so it works in every Windows console.
 
 ## Development
 

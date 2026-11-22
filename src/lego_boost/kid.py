@@ -8,6 +8,9 @@
         robot.turn_left()
         print(robot.see_color())
 
+German: `Roboter` has the same robot with German method names and messages
+(`roboter.licht("rot")`, `roboter.vorwaerts(2)`, `roboter.farbe()` -> "gruen").
+
 Assumes a driving model where motors A and B are the left and right wheels/tracks
 (e.g. Vernie, M.T.R.4, Frankie's base). Speeds are 0..100 percent.
 """
@@ -17,6 +20,7 @@ from __future__ import annotations
 import time
 
 from lego_boost.hub import connect, link_alive, safe_shutdown
+from lego_boost.i18n import DE, EN, color_to_english, color_word, color_words, t
 
 COLORS = {
     "off": 0x00,
@@ -51,8 +55,12 @@ def turn_seconds(degrees: float) -> float:
 
 
 class Robot:
-    def __init__(self, address: str | None = None):
+    lang = EN  # language of the printed messages
+
+    def __init__(self, address: str | None = None, lang: str | None = None):
         self._address = address
+        if lang is not None:
+            self.lang = lang
         self.hub = None
         self._last_color = 0xFF
         self._last_distance: float | None = None
@@ -60,21 +68,25 @@ class Robot:
     # --- connection -------------------------------------------------------
     def __enter__(self) -> Robot:
         self.hub = connect(self._address)
-        print("Robot connected!")
+        print(self._t("robot_connected"))
         self.light("green")
         return self
 
     def __exit__(self, *exc) -> None:
         if self.hub is not None:
             safe_shutdown(self.hub)
-            print("Robot stopped. Bye!")
+            print(self._t("robot_bye"))
 
     # --- light ------------------------------------------------------------
     def light(self, color: str) -> None:
-        """Change the hub's light: red, green, blue, yellow, purple, white, off, ..."""
-        name = color.lower()
-        if name not in COLORS:
-            print(f"I don't know the color '{color}'. Try one of: {', '.join(COLORS)}")
+        """Change the hub's light: red, green, blue, yellow, purple, white, off, ...
+
+        German colour names work too ("rot", "gruen", ...).
+        """
+        name = color_to_english(color, COLORS)
+        if name is None:
+            colors = ", ".join(color_words(self.lang, COLORS))
+            print(self._t("robot_unknown_color", color=color, colors=colors))
             return
         self.hub.led.set_color(COLORS[name])
 
@@ -117,7 +129,7 @@ class Robot:
         """Turn the extra motor (port C or D), e.g. Vernie's head or a shooter."""
         motor = self.hub.motor_external
         if motor is None:
-            print("No extra motor plugged into port C or D.")
+            print(self._t("no_extra_motor"))
             return
         motor.angled(degrees, _speed(speed))
 
@@ -128,7 +140,7 @@ class Robot:
     def _ensure_sensor(self) -> bool:
         sensor = self.hub.vision_sensor
         if sensor is None:
-            print("No color/distance sensor plugged in.")
+            print(self._t("no_sensor"))
             return False
         if not getattr(self, "_subscribed", False):
             sensor.subscribe(self._on_sensor)
@@ -171,3 +183,56 @@ class Robot:
     @staticmethod
     def wait(seconds: float) -> None:
         time.sleep(seconds)
+
+    def _t(self, key: str, **values) -> str:
+        return t(self.lang, key, **values)
+
+
+class Roboter(Robot):
+    """The same robot in German: German messages, German method names.
+
+        with Roboter() as roboter:
+            roboter.licht("gruen")
+            roboter.vorwaerts(2)
+            roboter.rechts()
+            print(roboter.farbe())
+
+    Each German method just calls the English one.
+    """
+
+    lang = DE
+
+    def vorwaerts(self, sekunden: float = 1, tempo: float = DEFAULT_SPEED) -> None:
+        self.forward(sekunden, tempo)
+
+    def rueckwaerts(self, sekunden: float = 1, tempo: float = DEFAULT_SPEED) -> None:
+        self.backward(sekunden, tempo)
+
+    def links(self, sekunden: float = QUARTER_TURN_SECONDS, grad: float | None = None) -> None:
+        """Auf der Stelle links drehen. Ohne Zahl: eine Vierteldrehung (90 Grad)."""
+        self.turn_left(sekunden, degrees=grad)
+
+    def rechts(self, sekunden: float = QUARTER_TURN_SECONDS, grad: float | None = None) -> None:
+        """Auf der Stelle rechts drehen. Ohne Zahl: eine Vierteldrehung (90 Grad)."""
+        self.turn_right(sekunden, degrees=grad)
+
+    def licht(self, farbe: str) -> None:
+        """Licht am Hub: rot, gruen, blau, gelb, lila, weiss, aus, ..."""
+        self.light(farbe)
+
+    def farbe(self) -> str:
+        """Die Farbe vor dem Sensor auf Deutsch ("gruen"), oder "nichts"."""
+        return color_word(self.see_color(), DE)
+
+    def abstand(self) -> float | None:
+        return self.distance()
+
+    def anhalten(self) -> None:
+        self.stop()
+
+    def batterie(self) -> float | None:
+        return self.battery()
+
+    @staticmethod
+    def warte(sekunden: float) -> None:
+        time.sleep(sekunden)

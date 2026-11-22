@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from lego_boost.i18n import EN, t
 from lego_boost.kid import COLOR_NAMES, Robot
 
 
@@ -66,10 +67,10 @@ class SimHub:
         self.connection.disconnect()
 
 
-def sim_robot(say: Callable[[str], None] = print) -> Robot:
+def sim_robot(say: Callable[[str], None] = print, lang: str = EN) -> Robot:
     """A connected-looking Robot on a SimHub (what `with Robot()` would give you)."""
-    robot = Robot()
+    robot = Robot(lang=lang)
     robot.hub = SimHub(say)
-    say("Robot connected! (simulated - no hub needed)")
+    say(t(lang, "robot_connected_sim"))
     robot.light("green")
     return robot

@@ -25,7 +25,9 @@ jobs:
           uv run boost-console --help
       - name: Smoke test simulated console session
         shell: bash
-        run: printf 'forward 0.2\nled red\nraw\nmotor A 30 0.2\nbattery\nexit\n' | uv run boost-console --simulate
+        run: |
+          printf 'forward 0.2\nled red\nraw\nmotor A 30 0.2\nbattery\nexit\n' | uv run boost-console --simulate
+          printf 'vor 0.2\nlicht rot\nroh\nwinkel A 90\nbatterie\nende\n' | uv run boost-console --simulate --lang de
       - name: Smoke test Windows launcher
         if: runner.os == 'Windows'
         shell: cmd

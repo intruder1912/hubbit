@@ -53,7 +53,7 @@ def test_no_hub_found_is_a_friendly_error(monkeypatch, capsys):
     def no_hub():
         raise RuntimeError("No Move Hub found within 15s.")
 
-    monkeypatch.setattr(console, "_connect_hub", lambda address: no_hub)
+    monkeypatch.setattr(console, "_connect_hub", lambda address, lang: no_hub)
     assert console.main([]) == 1
     assert "Could not connect: No Move Hub found" in capsys.readouterr().out
 

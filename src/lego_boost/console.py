@@ -2,8 +2,10 @@
 
     uv run boost-console              # connect to the hub (press the green button)
     uv run boost-console --simulate   # practice without a hub
+    uv run boost-console --lang de    # German messages (or BOOST_LANG=de); words work in both
 
 Type `help` for the commands, `raw` for grown-up commands, `exit` to stop.
+German: `hilfe`, `roh`, `ende`; `sprache deutsch` / `language english` switches messages.
 The hub stays connected until `exit`, Ctrl+C or Ctrl+D.
 
 SAFETY: drives the motors. `stop` (or Ctrl+C) stops them at once; moves last <= 10 s.
@@ -16,46 +18,51 @@ import sys
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from lego_boost.commands import PORTS, RAW, canonical, words
+from lego_boost.commands import PORTS, RAW, TURN_WORDS, canonical, words
+from lego_boost.i18n import DE, LANGS, color_word, color_words, default_lang, normalize, t
 from lego_boost.kid import COLORS, Robot
 from lego_boost.session import CONNECTED, Session
 
 HISTORY_FILE = Path.home() / ".lego_boost_history"
-BANNER = "LEGO BOOST console. Type 'help' for commands, 'exit' to stop."
 
 
 def status_text(session: Session) -> str:
     """One-line status for the bottom bar."""
-    state = session.check()
+    lang = session.lang
+    state = t(lang, session.check())
     battery = "?" if session.last_battery is None else f"{session.last_battery:.1f} V"
-    color = session.last_color or "-"
-    return f" {state} | mode: {session.mode} | battery: {battery} | last color: {color} "
+    color = color_word(session.last_color, lang) if session.last_color else "-"
+    mode = t(lang, session.mode)
+    return t(lang, "status", state=state, mode=mode, battery=battery, color=color)
 
 
 def completions(session: Session, text_before_cursor: str) -> list[str]:
     """Words that fit at the cursor: commands first, then colors or ports."""
-    parts = text_before_cursor.lower().split()
+    lang = session.lang
+    parts = normalize(text_before_cursor).split()
     if text_before_cursor.endswith(" ") or not parts:
         parts.append("")
     current = parts[-1]
     if len(parts) == 1:
-        candidates: Iterable[str] = [*words(session.mode), *COLORS]
+        candidates: Iterable[str] = [*words(session.mode, lang), *color_words(lang, COLORS)]
     else:
         command = canonical(parts[0]) or parts[0]
         if command == "led" and len(parts) == 2:
-            candidates = COLORS
+            candidates = color_words(lang, COLORS)
         elif command in ("motor", "angle") and len(parts) == 2:
             candidates = [port.lower() for port in PORTS]
-        elif command == "turn" and len(parts) == 2:
-            candidates = ["left", "right"]
+        elif command in TURN_WORDS and len(parts) == 2:
+            candidates = ["links", "rechts"] if lang == DE else ["left", "right"]
+        elif command == "language" and len(parts) == 2:
+            candidates = ["deutsch", "english"]
         else:
             candidates = []
     return sorted({word for word in candidates if word.startswith(current)})
 
 
-def _connect_hub(address: str | None) -> Callable[[], Robot]:
+def _connect_hub(address: str | None, session_lang: Callable[[], str]) -> Callable[[], Robot]:
     def connect() -> Robot:
-        return Robot(address).__enter__()
+        return Robot(address, session_lang()).__enter__()
 
     return connect
 
@@ -64,7 +71,7 @@ def _run_plain(session: Session, lines: Iterable[str], say: Callable[[str], None
     """No terminal (piped input, CI): read commands line by line."""
     for line in lines:
         line = line.rstrip("\n")
-        say(f"{session.mode}> {line}")
+        say(f"{t(session.lang, session.mode)}> {line}")
         if not session.handle(line):
             return
         session.wait_idle(15)
@@ -85,8 +92,8 @@ def _run_prompt(session: Session, history: Path | None) -> None:
 
     def message():
         if session.mode == RAW:
-            return HTML("<ansired><b>raw&gt;</b></ansired> ")
-        return HTML("<ansigreen><b>robot&gt;</b></ansigreen> ")
+            return HTML(f"<ansired><b>{t(session.lang, 'raw')}&gt;</b></ansired> ")
+        return HTML(f"<ansigreen><b>{t(session.lang, 'prompt')}&gt;</b></ansigreen> ")
 
     def toolbar():
         text = status_text(session)
@@ -121,24 +128,35 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--address", help="hub address (default: $BOOST_HUB_ADDRESS or scan)")
     parser.add_argument("--simulate", action="store_true", help="practice without a hub")
     parser.add_argument("--no-history", action="store_true", help="don't save typed commands")
+    parser.add_argument(
+        "--lang",
+        choices=LANGS,
+        default=default_lang(),
+        help="language of messages: en or de (default: $BOOST_LANG, else en)",
+    )
     args = parser.parse_args(argv)
 
     say = print
+    session: Session | None = None
+
+    def lang() -> str:
+        return session.lang if session is not None else args.lang
+
     if args.simulate:
         from lego_boost.sim import sim_robot
 
         def connect() -> Robot:
-            return sim_robot(say)
+            return sim_robot(say, lang())
     else:
-        connect = _connect_hub(args.address)
+        connect = _connect_hub(args.address, lang)
 
-    session = Session(connect, say)
+    session = Session(connect, say, lang=args.lang)
     try:
         session.open()
     except Exception as err:  # noqa: BLE001 - no traceback for a hub that isn't there
-        say(f"Could not connect: {err}")
+        say(t(args.lang, "could_not_connect", error=err))
         return 1
-    say(BANNER)
+    say(t(session.lang, "banner"))
     interactive = sys.stdin.isatty() and sys.stdout.isatty()
     try:
         if interactive:
@@ -146,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             _run_plain(session, sys.stdin, say)
     except KeyboardInterrupt:  # Ctrl+C: stop and leave
-        say("Ctrl+C - stopping.")
+        say(t(session.lang, "ctrl_c"))
     finally:
         session.close()
     return 0

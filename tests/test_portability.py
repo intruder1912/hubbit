@@ -36,3 +36,15 @@ def test_launcher_scripts_use_crlf():
     gitattributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
     assert "*.cmd text eol=crlf" in gitattributes
     assert sorted((ROOT / "windows").glob("*.cmd")), "no launchers in windows/"
+
+
+def test_launchers_point_to_existing_missions():
+    """Every kids mission (English and German) has a launcher; every launched script exists."""
+    launched = set()
+    for launcher in (ROOT / "windows").glob("*.cmd"):
+        for word in launcher.read_text(encoding="utf-8").split():
+            if word.startswith("kids\\"):
+                assert (ROOT / word.replace("\\", "/")).is_file(), f"{launcher.name}: {word}"
+                launched.add(word.replace("\\", "/"))
+    missions = {p.relative_to(ROOT).as_posix() for p in (ROOT / "kids").rglob("[0-9]*.py")}
+    assert missions == launched
