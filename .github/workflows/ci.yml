@@ -19,3 +19,11 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+      - name: Smoke test entry points
+        run: uv run boost-scan --help
+      - name: Smoke test Windows launcher
+        if: runner.os == 'Windows'
+        shell: cmd
+        env:
+          LEGO_BOOST_NO_PAUSE: "1"
+        run: call windows\_run.cmd boost-scan --help

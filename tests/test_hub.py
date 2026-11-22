@@ -49,6 +49,27 @@ def test_boost_stops_motors_even_on_error(monkeypatch):
     assert fake.connection.closed
 
 
+def test_boost_stops_motors_on_ctrl_c(monkeypatch):
+    fake = FakeHub()
+    monkeypatch.setattr(hub_mod, "connect", lambda *a, **k: fake)
+    with pytest.raises(KeyboardInterrupt), hub_mod.boost():
+        raise KeyboardInterrupt
+    assert fake.motor_AB.stopped and fake.connection.closed
+
+
+def test_robot_stops_motors_on_ctrl_c(monkeypatch):
+    from types import SimpleNamespace
+
+    from lego_boost import kid
+
+    fake = FakeHub()
+    fake.led = SimpleNamespace(set_color=lambda color: None)
+    monkeypatch.setattr(kid, "connect", lambda *a, **k: fake)
+    with pytest.raises(KeyboardInterrupt), kid.Robot():
+        raise KeyboardInterrupt
+    assert fake.motor_AB.stopped and fake.connection.closed
+
+
 def test_safe_shutdown_does_not_hang(monkeypatch):
     fake = FakeHub(hang_on_disconnect=True)
     start = time.monotonic()

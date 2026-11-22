@@ -26,6 +26,7 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 - `experiments/NN_name.py` — numbered adult experiments, one topic each
 - `kids/NN_name.py` — "missions" for a young programmer (see rules below)
 - `tests/` — unit tests with fake hubs; CI runs them on macOS, Ubuntu, Windows
+- `windows/` — `.cmd` double-click launchers (CRLF via `.gitattributes`); one per kids mission
 - `docs/` — per-OS setup, hardware notes, troubleshooting, workflow
 
 ## Rules
@@ -42,6 +43,7 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 - **Cross-platform:** no OS-specific paths/shell tricks in Python code; keep bleak as the
   only backend unless an issue says otherwise. Hub address = MAC on Linux/Windows,
   CoreBluetooth UUID on macOS (`BOOST_HUB_ADDRESS` env var).
+- **Printed text is ASCII-only** (Windows code pages); `tests/test_portability.py` checks it.
 - **Kids track:** short scripts (< 30 lines), only `lego_boost.kid.Robot`, a comment header
   with "Mission", "How to run", "Try this". No advanced Python (no lambdas, classes, async).
 - New experiment: next free number, docstring with purpose / run command / hardware needs.

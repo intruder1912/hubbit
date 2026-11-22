@@ -37,6 +37,7 @@ OS-specific notes (Bluetooth permissions, BlueZ, etc.):
 | `kids/` | Simple "missions" for young programmers using a friendly `Robot` API |
 | `src/lego_boost/` | Helpers: scan with timeout, safe connect/disconnect, kid API |
 | `docs/` | Setup per OS, hardware notes, troubleshooting, workflow |
+| `windows/` | Double-click launchers for the kids missions on Windows |
 
 ### Writing your own script
 
