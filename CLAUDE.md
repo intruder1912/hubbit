@@ -31,6 +31,8 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
   - `console.py`: `boost-console` (prompt_toolkit; plain line mode when stdin is not a TTY)
   - `tui.py`: `boost-tui` (textual). Buttons/keys/command line all go through
     `Session.handle`; tested headless with textual's `Pilot` (`tests/test_tui.py`)
+    Live sensor panel = `Session(poll=...)`: the idle worker refreshes cached readings
+    (battery only every 30 s); polls are never queued, so they never delay a command
   - `sim.py`: pretend hub for `--simulate` and CI smoke tests
   - `i18n.py`: English/German message tables, German colour words, umlaut normalising.
     German words are always accepted; `lang` only picks the output language
@@ -66,7 +68,8 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 
 `.claude/settings.json` allows the usual uv/git/gh PR commands, asks before `gh api` and
 label/repo changes, and denies force pushes and pushes to `main`. In the sandbox:
-`gh` and the hardware commands (`boost-scan`, `boost-console`, `experiments/`, `kids/`) run
+`gh` and the hardware commands (`boost-scan`, `boost-console`, `boost-tui`, `experiments/`,
+`kids/`) run
 outside it (`excludedCommands`: gh fails TLS checks inside, Bluetooth is unavailable inside);
 PyPI and GitHub hosts are allowed. An exclusion only applies when **every** part of a command
 matches: run `gh ...` on its own, without `cd ... &&`, pipes or redirects. Push branches with

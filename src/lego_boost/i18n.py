@@ -88,6 +88,21 @@ def color_words(lang: str, english_colors) -> list[str]:
     return list(english_colors)
 
 
+TILT_DE = {
+    "up": "oben",
+    "down": "unten",
+    "left": "links",
+    "right": "rechts",
+    "front": "vorne",
+    "back": "hinten",
+}
+
+
+def tilt_word(tilt: str, lang: str) -> str:
+    """How to show a tilt state from `Robot.tilt()` in `lang`."""
+    return TILT_DE.get(tilt, tilt) if lang == DE else tilt
+
+
 PARAM_NAMES_DE = {
     "seconds": "Sekunden",
     "degrees": "Grad",
@@ -163,6 +178,12 @@ MESSAGES = {
         "tui_ask_color": "What color?",
         "tui_ask_distance": "How far?",
         "tui_placeholder": "Type a command (help) - arrow keys drive, space stops",
+        "tui_sensors": "Sensors",
+        "tui_color": "Color",
+        "tui_distance": "Distance",
+        "tui_tilt": "Tilt",
+        "tui_battery": "Battery",
+        "tui_keys": "Arrows: drive   Space/Esc: STOP   F1: help   Ctrl+Q: quit",
         "tui_banner": "Ready! Click the buttons, use the arrow keys, or type 'help'.",
         # robot (kid.py, sim.py)
         "robot_connected": "Robot connected!",
@@ -233,6 +254,12 @@ MESSAGES = {
         "tui_ask_color": "Welche Farbe?",
         "tui_ask_distance": "Wie weit?",
         "tui_placeholder": "Befehl tippen (hilfe) - Pfeiltasten fahren, Leertaste haelt an",
+        "tui_sensors": "Sensoren",
+        "tui_color": "Farbe",
+        "tui_distance": "Abstand",
+        "tui_tilt": "Neigung",
+        "tui_battery": "Batterie",
+        "tui_keys": "Pfeile: fahren   Leertaste/Esc: STOPP   F1: Hilfe   Strg+Q: Ende",
         "tui_banner": "Los geht's! Klick die Knoepfe, nimm die Pfeiltasten oder tippe 'hilfe'.",
         "robot_connected": "Roboter verbunden!",
         "robot_connected_sim": "Roboter verbunden! (nur simuliert - kein Hub noetig)",

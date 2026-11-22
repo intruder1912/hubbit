@@ -41,6 +41,7 @@ CLOSED = "closed"
 NOT_OPEN = "not open"
 
 GRACE_SECONDS = 5.0  # extra time a command may take before the hub counts as lost
+BATTERY_EVERY = 30.0  # seconds between battery reads while polling (2 BLE round trips each)
 _POLL = 0.05
 
 
@@ -65,6 +66,7 @@ class Session:
         output: Callable[[str], None] = print,
         grace: float = GRACE_SECONDS,
         lang: str = EN,
+        poll: float | None = None,
     ):
         self._connect = connect
         self._output = output
@@ -78,6 +80,12 @@ class Session:
         self.last_color: str | None = None
         self.last_battery: float | None = None
         self.lang = lang  # language of messages ("en" / "de"); input accepts both
+        # poll: when idle, the worker refreshes the readings below every `poll` seconds
+        # (for live displays such as boost-tui). Not a queued command: never delays one.
+        self._poll = poll
+        self._next_battery = 0.0
+        self.last_distance: float | None = None
+        self.last_tilt: str | None = None
 
     # --- lifecycle ----------------------------------------------------------
     def open(self) -> None:
@@ -235,7 +243,13 @@ class Session:
     # --- worker -------------------------------------------------------------
     def _work(self, worker: _Worker) -> None:
         while True:
-            item = worker.queue.get()
+            try:
+                item = worker.queue.get(timeout=self._poll)
+            except queue.Empty:  # idle: refresh the live readings
+                self._refresh(worker)
+                if self._worker is not worker:
+                    return
+                continue
             if item is None:
                 return
             gen, cmd = item
@@ -258,6 +272,26 @@ class Session:
                     worker.pending -= 1
             if self._worker is not worker:
                 return  # abandoned (lost hub or reconnect)
+
+    def _refresh(self, worker: _Worker) -> None:
+        """Update last_color / last_distance / last_tilt (cached by subscriptions, no BLE
+        round trip after the first call) and, every BATTERY_EVERY seconds, last_battery."""
+        robot = self.robot
+        if robot is None or self._worker is not worker or self.state != CONNECTED:
+            return
+        worker.deadline = time.monotonic() + self._grace
+        try:
+            if getattr(robot.hub, "vision_sensor", None) is not None:
+                self.last_color = robot.see_color()
+                self.last_distance = robot.distance()
+            self.last_tilt = robot.tilt()
+            if time.monotonic() >= self._next_battery:
+                self._next_battery = time.monotonic() + BATTERY_EVERY
+                self.last_battery = robot.battery()
+        except Exception:  # noqa: BLE001 - a missed reading is not worth a message
+            log.debug("sensor refresh failed", exc_info=True)
+        finally:
+            worker.deadline = None
 
     def _budget(self, cmd: Command) -> float:
         name, args = cmd.name, cmd.args
@@ -330,7 +364,7 @@ class Session:
             self.last_color = robot.see_color()
             return self._t("i_see", color=color_word(self.last_color, self.lang))
         elif name == "distance":
-            distance = robot.distance()
+            distance = self.last_distance = robot.distance()
             if distance is None:
                 return self._t("nothing_in_front")
             return self._t("distance", distance=distance)

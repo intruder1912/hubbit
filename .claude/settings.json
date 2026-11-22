@@ -8,6 +8,7 @@
       "Bash(uv run ruff:*)",
       "Bash(uv run boost-scan:*)",
       "Bash(uv run boost-console:*)",
+      "Bash(uv run boost-tui:*)",
       "Bash(uv run experiments/:*)",
       "Bash(uv run kids/:*)",
       "Bash(git status:*)",
@@ -76,6 +77,8 @@
       "uv run boost-console *",
       "uv run boost-console",
       "uv run experiments/*",
+      "uv run boost-tui",
+      "uv run boost-tui *",
       "uv run kids/*"
     ]
   }

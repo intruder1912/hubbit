@@ -91,7 +91,8 @@ uv run boost-tui                  # or: --simulate (no hub), --lang de (German)
 ```
 
 A full-screen window on the same session as the console: big buttons for driving and the
-light colours, "What color?" / "How far?", a log, and a command line at the bottom that
+light colours, "What color?" / "How far?", a live sensor panel (colour swatch, distance
+bar, tilt, battery), a log, and a command line at the bottom that
 takes every console command (also `raw`). Arrow keys drive in short steps: hold a key to
 keep going, let go and the robot stops within ~0.3 s. Space, Escape or the STOP button stop
 at once; Ctrl+Q closes the window (and stops the motors). On Windows: `windows\tui.cmd`,

@@ -168,3 +168,38 @@ def test_cli_help(argv, capsys):
     with pytest.raises(SystemExit):
         tui.main(argv)
     assert "--simulate" in capsys.readouterr().out
+
+
+def test_bar():
+    assert tui.bar(5, 0, 10) == "[#####-----]"
+    assert tui.bar(-3, 0, 10) == "[----------]"
+    assert tui.bar(99, 0, 10, width=4) == "[####]"
+
+
+def test_sensor_panel_shows_live_readings_in_both_languages():
+    async def test(pilot, app, sim):
+        session = app.session
+        session.last_color, session.last_distance = "green", 5.0
+        session.last_tilt, session.last_battery = "up", 6.5
+        text = tui.sensor_text(session).plain
+        assert "green" in text and "[#####-----] 5" in text
+        assert "Tilt      up" in text and "6.5 V" in text
+        session.lang = "de"
+        text = tui.sensor_text(session).plain
+        assert "Farbe" in text and "gruen" in text and "Neigung   oben" in text
+        await pilot.pause(0.6)  # the panel itself is refreshed by the timer
+        assert "gruen" in str(app.query_one("#sensors").render())
+
+    run(test)
+
+
+def test_sim_polls_the_battery_into_the_panel():
+    async def test(pilot, app, sim):
+        for _ in range(100):
+            if app.session.last_battery is not None:
+                break
+            await pilot.pause(0.02)
+        assert app.session.last_battery == 9.0
+        assert "Pfeile: fahren" in str(app.query_one("#keys").render())
+
+    run(test, lang="de")

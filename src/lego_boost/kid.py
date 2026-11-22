@@ -64,6 +64,8 @@ class Robot:
         self.hub = None
         self._last_color = 0xFF
         self._last_distance: float | None = None
+        self._last_tilt: str | None = None
+        self._tilt_subscribed = False
 
     # --- connection -------------------------------------------------------
     def __enter__(self) -> Robot:
@@ -163,6 +165,25 @@ class Robot:
         if not self._ensure_sensor():
             return None
         return self._last_distance
+
+    def tilt(self) -> str | None:
+        """Which way the hub is tipped: "up", "down", "left", "right", "front", "back".
+
+        None if the hub has no tilt sensor or no reading came in yet.
+        """
+        sensor = getattr(self.hub, "tilt_sensor", None)
+        if sensor is None:
+            return None
+        if not self._tilt_subscribed:
+            states = getattr(sensor, "TRI_STATES", {})
+
+            def on_tilt(state, *_):
+                self._last_tilt = str(states.get(state, state)).lower()
+
+            sensor.subscribe(on_tilt, mode=sensor.MODE_3AXIS_SIMPLE)
+            self._tilt_subscribed = True
+            time.sleep(0.3)
+        return self._last_tilt
 
     # --- hub --------------------------------------------------------------
     def battery(self) -> float | None:
