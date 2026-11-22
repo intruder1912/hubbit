@@ -6,11 +6,13 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10,<3.14"
 dependencies = [
+    "prompt-toolkit>=3.0",
     "pylgbst[bleak]",
 ]
 
 [project.scripts]
 boost-scan = "lego_boost.scan:main"
+boost-console = "lego_boost.console:main"
 
 [dependency-groups]
 dev = [

@@ -65,6 +65,25 @@ with Robot() as robot:
 
 Set `BOOST_HUB_ADDRESS` (printed by `boost-scan`) to skip scanning.
 
+## Console: drive the robot by typing
+
+```text
+$ uv run boost-console            # or: uv run boost-console --simulate  (no hub needed)
+robot> forward 2
+robot> turn left 90
+robot> led red
+robot> color
+I see: red
+robot> raw                        # grown-up commands: motor, angle, sensors, battery, hub
+raw> motor A 30 1.5
+raw> exit
+```
+
+The hub stays connected until `exit` (or Ctrl+C / Ctrl+D). `stop` stops the motors at
+once; `help` lists all commands; Tab completes words; Up arrow repeats earlier commands.
+If the hub gets lost, the console says so: press the green button and type `reconnect`.
+On Windows, double-click `windows\console.cmd` (or `console-practice.cmd` for the simulation).
+
 ## Development
 
 ```bash

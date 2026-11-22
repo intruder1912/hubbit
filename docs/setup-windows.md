@@ -40,6 +40,10 @@ in Explorer: a window opens, runs the script with the project's Python, and stay
 at the end ("Press any key ...") so the output can be read. Press the hub's green button
 **right before** double-clicking (it only advertises for ~10 s).
 
+`console.cmd` starts the typing console (`boost-console`): the hub stays connected until
+`exit`, so there is no need to press the green button again for every command.
+`console-practice.cmd` runs the same console without a hub (`--simulate`).
+
 Tip: drag `windows\mission-1-hello-light.cmd` to the desktop with **Alt** held to create
 a shortcut.
 
