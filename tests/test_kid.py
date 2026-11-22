@@ -125,3 +125,30 @@ def test_close_can_skip_the_goodbye(monkeypatch, capsys):
     assert closed == ["hub"] and capsys.readouterr().out == ""
     robot.__exit__(None, None, None)
     assert "Bye" in capsys.readouterr().out
+
+
+def test_see_color_waits_for_a_stable_colour():
+    from types import SimpleNamespace
+
+    from lego_boost import kid
+
+    now = [0.0]
+    robot = Robot()
+    robot._clock = lambda: now[0]
+    robot._subscribed = True  # skip subscribe + sleep
+    robot.hub = SimpleNamespace(vision_sensor=object())
+    red, black, blue = kid.COLORS["red"], 0x00, kid.COLORS["blue"]
+
+    robot._on_sensor(red, 3.0)
+    assert robot.see_color() == "red"  # first reading counts at once
+    now[0] = 1.0
+    robot._on_sensor(black, 4.0)  # gap between two bricks
+    now[0] = 1.1
+    robot._on_sensor(blue, 2.0)
+    now[0] = 1.2
+    assert robot.see_color() == "red"  # blue too new, black never counted
+    now[0] = 1.1 + kid.COLOR_STABLE_SECONDS
+    assert robot.see_color() == "blue"
+    robot._on_sensor(blue, 2.5)  # same colour again: timer not reset
+    assert robot.see_color() == "blue"
+    assert robot.distance() == 2.5  # distance is not delayed

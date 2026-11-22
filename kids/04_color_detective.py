@@ -12,7 +12,8 @@ with Robot() as robot:
     last = None
     for _ in range(200):
         color = robot.see_color()
-        if color != last and color != "nothing":
+        # "black" mostly means "too dark or too far", so we skip it like "nothing"
+        if color != last and color not in ("nothing", "black"):
             print("I see", color.upper(), "!")
             robot.light(color)
             last = color
