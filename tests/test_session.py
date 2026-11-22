@@ -256,7 +256,9 @@ def test_hold_keeps_driving_while_repeated_and_stops_after(make):
     assert motor.stops == 1
     session.hold("left")
     session.hold("right")  # direction change while driving
-    time.sleep(0.15)
+    end = time.monotonic() + 2  # first a short pulse, then continuous (slow CI: poll)
+    while ("start_speed", 0.5, -0.5) not in motor.calls and time.monotonic() < end:
+        time.sleep(0.02)
     session.stop()
     assert session.wait_idle(2)
     assert motor.calls[-1] == ("start_speed", 0.5, -0.5)
