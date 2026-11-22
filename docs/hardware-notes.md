@@ -102,6 +102,15 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   `BleakScanner(service_uuids=["00001623-1212-efde-1623-785feabcd123"])` found the hub
   ("Move Hub") within 0.5 s. So the fixed pylgbst works on macOS with the filter.
 
+## Mission 4 with LEGO bricks (2026-11-22, Mac, #2)
+
+- `Robot.see_color()` is debounced now: a new colour counts after 0.3 s
+  (`COLOR_STABLE_SECONDS`); the first reading counts at once.
+- Run 1 (debounce only), bricks red → blue → yellow at 1-2 cm: `RED`, `BLACK`, `YELLOW`.
+  Blue was lost to a BLACK reading. No more flicker between bricks.
+- Mission 4 (EN + DE) now skips "black" like "nothing" (BLACK mostly means too dark / too
+  far). Run 2: `RED`, `BLUE`, `YELLOW`, all three right. Good enough, no further tuning.
+
 ## Platform log
 
 Record what was verified on real hardware.

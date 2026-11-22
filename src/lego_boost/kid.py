@@ -50,6 +50,7 @@ TURN_SPEED = 50  # turning on the spot
 # Turning at 50% on a hard floor (Vernie, 2026-11-21/22): the motors need ~0.1 s to get
 # going, then turn ~310 deg/s. Measured 0.19 s ~ 30, 0.35 s ~ 79, 0.38 s ~ 85,
 # 0.5 s ~ 130, 0.76 s ~ 205 deg - all within ~6 deg of this line.
+COLOR_STABLE_SECONDS = 0.3  # a new colour counts once it was seen this long (no flicker)
 TURN_START_SECONDS = 0.1
 TURN_DEGREES_PER_SECOND = 310.0
 
@@ -108,7 +109,9 @@ class Robot:
         if lang is not None:
             self.lang = lang
         self.hub = None
-        self._last_color = 0xFF
+        self._last_color = 0xFF  # the debounced colour see_color() reports
+        self._color_seen: tuple[int, float] | None = None  # (newest colour, since when)
+        self._clock = time.monotonic  # tests replace it
         self._last_distance: float | None = None
         self._last_tilt: str | None = None
         self._tilt_subscribed = False
@@ -207,13 +210,25 @@ class Robot:
         return True
 
     def _on_sensor(self, color, distance=None) -> None:
-        self._last_color = color
+        # pylgbst's thread: remember when a new colour showed up (one tuple = one assignment)
+        seen = self._color_seen
+        if seen is None:
+            self._last_color = color  # the very first reading counts at once
+        if seen is None or seen[0] != color:
+            self._color_seen = (color, self._clock())
         self._last_distance = distance
 
     def see_color(self) -> str:
-        """Name of the color in front of the sensor (or 'nothing')."""
+        """Name of the color in front of the sensor (or 'nothing').
+
+        A new colour only counts after COLOR_STABLE_SECONDS, so the short BLACK or
+        'nothing' between two bricks doesn't make the light flicker.
+        """
         if not self._ensure_sensor():
             return "nothing"
+        seen = self._color_seen
+        if seen is not None and self._clock() - seen[1] >= COLOR_STABLE_SECONDS:
+            self._last_color = seen[0]
         return COLOR_NAMES.get(self._last_color, "nothing")
 
     def distance(self) -> float | None:

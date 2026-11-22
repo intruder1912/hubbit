@@ -12,7 +12,8 @@ with Roboter() as roboter:
     letzte = None
     for _ in range(200):
         farbe = roboter.farbe()
-        if farbe != letzte and farbe != "nichts":
+        # "schwarz" heisst meist "zu dunkel oder zu weit weg", also wie "nichts"
+        if farbe != letzte and farbe not in ("nichts", "schwarz"):
             print("Ich sehe", farbe.upper(), "!")
             roboter.licht(farbe)
             letzte = farbe
