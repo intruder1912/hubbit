@@ -5,6 +5,18 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
 [Conventional Commits](https://www.conventionalcommits.org/) with git-cliff
 (see `docs/releasing.md`).
 
+## [0.1.1] - 2026-11-24
+
+Windows (the kids notebook) is now verified on real hardware (#4): setup, launchers,
+Thonny, missions 1-5 in English and German, console and TUI.
+
+### Bug Fixes
+- **kids:** no traceback after Ctrl+C in Robot (#44). Motors still stop and the hub
+  disconnects; kids missions (and Thonny's Stop button) now print one short line instead.
+
+### Documentation
+- **windows:** record Windows hardware results (#45).
+
 ## [0.1.0] - 2026-11-22
 
 First release. Verified on real hardware on macOS (Apple Silicon) and Kali Linux; Windows
