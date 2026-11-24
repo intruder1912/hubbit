@@ -151,6 +151,21 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   pylgbst's BLE thread dies, always closes half-set-up connections, asks for a fresh green
   button press before the retry and points Linux users to the reset steps.
 
+## Windows (2026-11-24, kids notebook, WinRT, #4)
+
+- Setup per `docs/setup-windows.md` went through without changes: uv 0.13.9, Python 3.12.16,
+  `uv sync`, `uv run pytest` passed. Hub not paired in Windows. `scan.cmd` found the hub and
+  saved the address; `BOOST_TRIM=5` (same robot as on the Mac and Kali).
+- Missions 1–5 (PowerShell, double-click launchers after sign-out/in, German launchers),
+  Thonny with `.venv\Scripts\python.exe` (F5, red Stop button stops the motors), console
+  (`stop` mid-move, degree turns, raw mode, hub off → `reconnect`, German, > 15 min) and
+  `boost-tui` (hold-to-drive, STOP, sensor panel, Ctrl+Q): all fine.
+- **Ctrl+C in a mission** stopped the motors, but Python then printed a `KeyboardInterrupt`
+  traceback (same on every OS). `Robot` now swallows Ctrl+C with one friendly line (#43,
+  PR #44). Thonny's Stop shows no traceback.
+- **Disconnect at the end takes ~5 s** (Mac/Linux: about 1 s). Below the `safe_shutdown`
+  timeouts (3 s + 3 s), so no hang; the WinRT stack is just slow to close the link.
+
 ## Platform log
 
 Record what was verified on real hardware.
@@ -164,4 +179,4 @@ Record what was verified on real hardware.
 | 2026-11-22 | Kali Linux (bare metal), BlueZ | 3.12 / 3.1.0 | ✅ setup, 02, 03, mission 3, console, TUI; reconnect needed a retry (fixed), TUI hang after quick restart (fixed); repeated reconnects flaky (stale BlueZ state, old BCM20702 adapter; reset steps in setup-linux.md) |
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ pylgbst pin `789a52e` without workarounds 1+2: stop mid-move, queued moves, hold-to-drive direction changes, stop while holding, tapped turns, raw `angle` + stop (no discarded-command errors); `02_hub_info` with upstream's `service_uuids` scan, clean disconnect |
 | | Ubuntu / Raspberry Pi OS | | pending |
-| | Windows | | pending |
+| 2026-11-24 | Windows (kids notebook), WinRT | 3.12.16 / 3.1.0 | ✅ setup, scan `--save`, missions 1–5 EN + DE (PowerShell, launchers, Thonny incl. Stop), console (all #13 checks), TUI; Ctrl+C traceback fixed (#43); disconnect ~5 s |

@@ -1,6 +1,7 @@
 # Setup on Windows 10/11
 
-Status: **not yet verified on hardware**. See the Windows validation issue (#4).
+Status: **verified on hardware** (2026-11-24, see `hardware-notes.md` and #4): setup, launchers,
+Thonny, console and TUI work.
 
 bleak uses the built-in Windows Bluetooth stack (WinRT). Any Bluetooth 4.0+ adapter
 recognised by Windows works; no extra dongle needed.
@@ -70,8 +71,8 @@ Both editors must use the project's Python in `.venv` (created by `uv sync`), ot
 2. Python executable: `<lego-boost folder>\.venv\Scripts\python.exe` → OK.
 3. Open e.g. `kids\01_hello_light.py`, press the green button on the hub, then **Run (F5)**.
 4. To stop a running mission use the red **Stop** button (or Ctrl+C in the shell pane).
-   Whether Stop always halts the motors cleanly is still to be checked in #4. Every motor
-   command ends by itself after its time anyway.
+   Stop halts the motors and disconnects cleanly (checked on hardware in #4), without a
+   traceback.
 
 **VS Code**
 1. Install the Python extension, open the `lego-boost` folder.
@@ -82,5 +83,8 @@ Both editors must use the project's Python in `.venv` (created by `uv sync`), ot
 
 - Text the scripts print is kept ASCII-only (checked by `tests/test_portability.py`), so
   old console code pages can't crash them.
-- Ctrl+C in a running script stops the motors and disconnects (tested with a fake hub in
-  CI on Windows; real-hardware check in #4).
+- Ctrl+C in a running script stops the motors and disconnects (checked on hardware in #4).
+  Kids missions then print one short line instead of a traceback.
+- Disconnecting at the end of a script takes about 5 s on Windows (about 1 s on
+  Mac/Linux). That is normal; just wait for "Bye!".
+- VS Code was not tried on hardware yet; it uses the same interpreter as Thonny.
