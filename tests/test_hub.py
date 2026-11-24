@@ -74,8 +74,21 @@ def test_robot_stops_motors_on_ctrl_c(monkeypatch):
     fake = FakeHub()
     fake.led = SimpleNamespace(set_color=lambda color: None)
     monkeypatch.setattr(kid, "connect", lambda *a, **k: fake)
-    with pytest.raises(KeyboardInterrupt), kid.Robot():
+    with kid.Robot():  # Ctrl+C is swallowed: no traceback for kids
         raise KeyboardInterrupt
+    assert fake.motor_AB.stopped and fake.connection.closed
+
+
+def test_robot_lets_other_errors_through(monkeypatch):
+    from types import SimpleNamespace
+
+    from lego_boost import kid
+
+    fake = FakeHub()
+    fake.led = SimpleNamespace(set_color=lambda color: None)
+    monkeypatch.setattr(kid, "connect", lambda *a, **k: fake)
+    with pytest.raises(ValueError), kid.Robot():
+        raise ValueError("boom")
     assert fake.motor_AB.stopped and fake.connection.closed
 
 

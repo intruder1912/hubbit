@@ -124,8 +124,13 @@ class Robot:
         self.light("green")
         return self
 
-    def __exit__(self, *exc) -> None:
+    def __exit__(self, exc_type, exc, tb) -> bool:
         self.close()
+        if exc_type is not None and issubclass(exc_type, KeyboardInterrupt):
+            # Ctrl+C / Thonny's Stop: motors are stopped, no scary traceback for kids
+            print(self._t("robot_interrupted"))
+            return True
+        return False
 
     def close(self, say_bye: bool = True) -> None:
         """Stop the motors and disconnect (what the end of `with Robot()` does)."""
