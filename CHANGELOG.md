@@ -5,6 +5,27 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
 [Conventional Commits](https://www.conventionalcommits.org/) with git-cliff
 (see `docs/releasing.md`).
 
+## [0.2.0] - 2026-11-25
+
+The project is now called **hubbit** (#47). LEGO's Fair Play guidelines ask third parties
+not to use LEGO marks as a product's own name; hubbit is an unofficial project, not made or
+endorsed by the LEGO Group (LEGO and BOOST are its trademarks). Smoke-tested on real hardware on macOS.
+
+### Breaking changes
+- Package `lego_boost` -> `hubbit`, commands `boost-scan` / `boost-console` / `boost-tui`
+  -> `hubbit-scan` / `hubbit-console` / `hubbit-tui`, repo `intruder1912/lego-boost` ->
+  `intruder1912/hubbit` (#48). Old GitHub URLs redirect; update your clone with
+  `git remote set-url origin https://github.com/intruder1912/hubbit.git`, then `uv sync`.
+- Deprecated until 0.3.0: `import lego_boost` still works (prints a warning), and the
+  `boost-*` commands remain as aliases.
+- Unchanged: the `BOOST_*` variables in `.env`, `boost()`, `Robot` / `Roboter`.
+
+### Documentation
+- v0.1.x attestations verify only with `--repo intruder1912/lego-boost` (#49).
+
+### Maintenance
+- **claude:** allow and unsandbox the `hubbit-*` commands (#51).
+
 ## [0.1.1] - 2026-11-24
 
 Windows (the kids notebook) is now verified on real hardware (#4): setup, launchers,
