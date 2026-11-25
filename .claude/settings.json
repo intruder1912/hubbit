@@ -6,9 +6,9 @@
       "Bash(uv lock:*)",
       "Bash(uv run pytest:*)",
       "Bash(uv run ruff:*)",
-      "Bash(uv run boost-scan:*)",
-      "Bash(uv run boost-console:*)",
-      "Bash(uv run boost-tui:*)",
+      "Bash(uv run hubbit-scan:*)",
+      "Bash(uv run hubbit-console:*)",
+      "Bash(uv run hubbit-tui:*)",
       "Bash(uv run experiments/:*)",
       "Bash(uv run kids/:*)",
       "Bash(git status:*)",
@@ -72,13 +72,13 @@
     },
     "excludedCommands": [
       "gh *",
-      "uv run boost-scan *",
-      "uv run boost-scan",
-      "uv run boost-console *",
-      "uv run boost-console",
+      "uv run hubbit-scan *",
+      "uv run hubbit-scan",
+      "uv run hubbit-console *",
+      "uv run hubbit-console",
       "uv run experiments/*",
-      "uv run boost-tui",
-      "uv run boost-tui *",
+      "uv run hubbit-tui",
+      "uv run hubbit-tui *",
       "uv run kids/*"
     ]
   }
