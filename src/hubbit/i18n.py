@@ -194,6 +194,10 @@ MESSAGES = {
         "robot_connected_sim": "Robot connected! (simulated - no hub needed)",
         "robot_bye": "Robot stopped. Bye!",
         "robot_interrupted": "(Stopped with Ctrl+C - that's fine.)",
+        "robot_not_found": "Robot not found. Press the green button on the hub and start again.",
+        "robot_no_connect": (
+            "Could not connect to the robot. Press the green button on the hub and start again."
+        ),
         "robot_unknown_color": "I don't know the color '{color}'. Try one of: {colors}",
         "no_extra_motor": "No extra motor plugged into port C or D.",
         "bad_trim": "BOOST_TRIM={value} is not a number from -{max} to {max}. Using {used}.",
@@ -272,6 +276,12 @@ MESSAGES = {
         "robot_connected_sim": "Roboter verbunden! (nur simuliert - kein Hub noetig)",
         "robot_bye": "Roboter angehalten. Tschuess!",
         "robot_interrupted": "(Mit Strg+C gestoppt - alles in Ordnung.)",
+        "robot_not_found": (
+            "Roboter nicht gefunden. Drueck den gruenen Knopf am Hub und starte nochmal."
+        ),
+        "robot_no_connect": (
+            "Keine Verbindung zum Roboter. Drueck den gruenen Knopf am Hub und starte nochmal."
+        ),
         "robot_unknown_color": "Die Farbe '{color}' kenne ich nicht. Probier: {colors}",
         "no_extra_motor": "Kein extra Motor an Anschluss C oder D.",
         "bad_trim": "BOOST_TRIM={value} ist keine Zahl von -{max} bis {max}. Nehme {used}.",

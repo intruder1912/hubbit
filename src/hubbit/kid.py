@@ -26,8 +26,9 @@ import os
 import time
 
 from hubbit.config import load_env
-from hubbit.hub import connect, link_alive, safe_shutdown
+from hubbit.hub import HubConnectError, HubNotFoundError, connect, link_alive, safe_shutdown
 from hubbit.i18n import DE, EN, color_to_english, color_word, color_words, t
+from hubbit.scan import BluetoothUnavailableError
 
 COLORS = {
     "off": 0x00,
@@ -118,11 +119,28 @@ class Robot:
         self.trim = read_trim(self.lang)  # percent, see BOOST_TRIM in the module docstring
 
     # --- connection -------------------------------------------------------
-    def __enter__(self) -> Robot:
+    def open(self) -> Robot:
+        """Connect (what `with Robot()` does). Raises if there is no hub (console, TUI)."""
         self.hub = connect(self._address)
         print(self._t("robot_connected"))
         self.light("green")
         return self
+
+    def __enter__(self) -> Robot:
+        # Kids get one friendly line and a quiet exit instead of a traceback;
+        # open() and boost() still raise with the details.
+        try:
+            return self.open()
+        except HubNotFoundError:
+            message = self._t("robot_not_found")
+        except HubConnectError:
+            message = self._t("robot_no_connect")
+        except BluetoothUnavailableError as err:
+            message = str(err)  # already a hint with what to do
+        except KeyboardInterrupt:
+            message = self._t("robot_interrupted")
+        print(message)
+        raise SystemExit(1)
 
     def __exit__(self, exc_type, exc, tb) -> bool:
         self.close()
