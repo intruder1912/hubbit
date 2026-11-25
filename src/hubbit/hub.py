@@ -20,6 +20,7 @@ from contextlib import contextmanager
 from types import SimpleNamespace
 
 from hubbit.config import load_env
+from hubbit.i18n import EN, t
 from hubbit.scan import MOVE_HUB_NAME, find_hub
 
 log = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ class HubConnectError(RuntimeError):
     """The hub was found, but setting up the connection failed or never finished."""
 
 
-def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
+def resolve_address(address: str | None = None, timeout: float = 15.0, lang: str = EN) -> str:
     """Explicit address > $BOOST_HUB_ADDRESS (shell or .env) > first hub found by a BLE scan.
 
     A known address is still waited for with a timed scan: the hub only accepts a
@@ -53,7 +54,7 @@ def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
     """
     load_env()
     address = address or os.environ.get(ENV_ADDRESS)
-    print("Looking for the Move Hub ... press its green button.")
+    print(t(lang, "looking_for_hub"))
     if address:
         found = find_hub(timeout, address=address)
         if found is None:
@@ -191,16 +192,17 @@ def _set_up_hub(addr: str):
     raise HubConnectError(f"{error}. Press the green button and try again.{_hint()}") from error
 
 
-def connect(address: str | None = None, timeout: float = 15.0):
+def connect(address: str | None = None, timeout: float = 15.0, lang: str = EN):
     """Return a connected pylgbst MoveHub. Prefer the `boost()` context manager.
 
     A setup that fails fast (BlueZ right after the hub restarted) is tried once more;
     one that hangs is given up after CONNECT_TIMEOUT (no retry, so waiting stays short).
+    `lang` picks the language of the printed progress lines (`Robot` passes its own).
     """
     patch_pylgbst()
     quiet_pylgbst_logs()
     for attempt in (1, 2):
-        addr = resolve_address(address, timeout)
+        addr = resolve_address(address, timeout, lang)
         log.info("Connecting to %s", addr)
         try:
             return _set_up_hub(addr)
@@ -208,7 +210,7 @@ def connect(address: str | None = None, timeout: float = 15.0):
             if attempt == 2 or err.__cause__ is None:  # second failure, or a timeout
                 raise
             log.info("Connection failed (%s), retrying", err.__cause__)
-            print("Connection failed. Press the green button again - trying once more ...")
+            print(t(lang, "connect_retry"))
     raise AssertionError("unreachable")
 
 
