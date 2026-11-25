@@ -292,3 +292,14 @@ def test_quit_does_not_wait_for_a_hanging_connect():
     start = time.monotonic()
     run(test, connect=connect)
     assert time.monotonic() - start < 5  # before: Python waited for the connect thread
+
+
+def test_tick_after_teardown_does_not_raise():
+    """#50: the 0.5 s status timer could fire while the screen was torn down (NoMatches)."""
+
+    async def test(pilot, app, sim):
+        await pilot.pause(0.05)
+
+    app = run(test)
+    app._tick()  # widgets are gone now; must be a no-op, not NoMatches
+    assert app._tick_timer is None  # the interval was stopped on unmount

@@ -25,7 +25,9 @@ from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Grid, Horizontal, VerticalScroll
+from textual.css.query import NoMatches
 from textual.message import Message
+from textual.timer import Timer
 from textual.widgets import Button, Input, RichLog, Static
 
 from hubbit.console import _connect_hub, status_text
@@ -142,6 +144,7 @@ class BoostTui(App):
         self._connecting = False
         self._last_arrow = 0.0
         self._stop_latched = False
+        self._tick_timer: Timer | None = None
 
     # --- layout -------------------------------------------------------------
     def compose(self) -> ComposeResult:
@@ -175,7 +178,7 @@ class BoostTui(App):
         self.begin_capture_print(self)  # Robot / pylgbst prints go to the log
         self._relabel()
         self._tick()
-        self.set_interval(0.5, self._tick)  # status bar + watchdog
+        self._tick_timer = self.set_interval(0.5, self._tick)  # status bar + watchdog
         self.query_one("#command", Input).focus()
         self._connecting = True
         self._in_background(self._open)
@@ -195,8 +198,12 @@ class BoostTui(App):
         self.query_one("#keys", Static).update(t(lang, "tui_keys"))
 
     def _tick(self) -> None:
-        self.query_one("#sensors", Static).update(sensor_text(self.session))
-        status = self.query_one("#status", Static)
+        try:
+            sensors = self.query_one("#sensors", Static)
+            status = self.query_one("#status", Static)
+        except NoMatches:  # the window is closing (#50): a timer tick can land mid-teardown
+            return
+        sensors.update(sensor_text(self.session))
         if self.session.state == NOT_OPEN:
             status.update(t(self.session.lang, "connecting"))
             return
@@ -312,6 +319,9 @@ class BoostTui(App):
         self.run_command("help")
 
     def on_unmount(self) -> None:
+        if self._tick_timer is not None:
+            self._tick_timer.stop()
+            self._tick_timer = None
         self.session.close()  # stop motors and disconnect when the window closes
 
 
