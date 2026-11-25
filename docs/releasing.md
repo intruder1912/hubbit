@@ -38,6 +38,8 @@ Scopes are optional: `hub`, `kid`, `console`, `tui`, `scan`, `kids`, `windows`, 
    changelog section as notes.
 
 Check a downloaded file: `gh attestation verify hubbit-X.Y.Z-py3-none-any.whl --repo intruder1912/hubbit`.
+Releases before the rename (v0.1.0, v0.1.1: files named `lego_boost-0.1.x-...`) were attested
+as `intruder1912/lego-boost` and only verify with `--repo intruder1912/lego-boost`.
 
 ## Why not PyPI (yet)
 
