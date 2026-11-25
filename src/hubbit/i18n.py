@@ -39,7 +39,7 @@ def lang_from_word(word: str) -> str | None:
 
 def default_lang() -> str:
     """Language from BOOST_LANG (shell or .env, e.g. "de"), else English."""
-    from lego_boost.config import load_env
+    from hubbit.config import load_env
 
     load_env()
     value = os.environ.get("BOOST_LANG", "")

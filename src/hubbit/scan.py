@@ -3,8 +3,8 @@
 pylgbst's own discovery waits forever if no hub shows up, so we scan
 ourselves first and hand pylgbst an exact address.
 
-Run as a command:  uv run boost-scan  [--timeout SECONDS] [--save]
-(`--save` remembers the address in the project's .env, see `lego_boost.config`)
+Run as a command:  uv run hubbit-scan  [--timeout SECONDS] [--save]
+(`--save` remembers the address in the project's .env, see `hubbit.config`)
 """
 
 from __future__ import annotations
@@ -121,13 +121,13 @@ def main(argv: list[str] | None = None) -> int:
     for hub in hubs:
         print(f"  {hub.name}  address={hub.address}  rssi={hub.rssi}")
     if not args.save:
-        print("\nTip: 'boost-scan --save' remembers the address in .env for next time.")
+        print("\nTip: 'hubbit-scan --save' remembers the address in .env for next time.")
         return 0
     if len(hubs) > 1:
-        print("\nSeveral hubs found - switch the others off and run 'boost-scan --save' again.")
+        print("\nSeveral hubs found - switch the others off and run 'hubbit-scan --save' again.")
         return 1
-    from lego_boost.config import save_value
-    from lego_boost.hub import ENV_ADDRESS
+    from hubbit.config import save_value
+    from hubbit.hub import ENV_ADDRESS
 
     path = save_value(ENV_ADDRESS, hubs[0].address)
     print(f"\nSaved {ENV_ADDRESS}={hubs[0].address} in {path}")

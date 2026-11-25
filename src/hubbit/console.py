@@ -1,8 +1,8 @@
-"""boost-console: drive the robot by typing commands, in one long session.
+"""hubbit-console: drive the robot by typing commands, in one long session.
 
-    uv run boost-console              # connect to the hub (press the green button)
-    uv run boost-console --simulate   # practice without a hub
-    uv run boost-console --lang de    # German messages (or BOOST_LANG=de); words work in both
+    uv run hubbit-console              # connect to the hub (press the green button)
+    uv run hubbit-console --simulate   # practice without a hub
+    uv run hubbit-console --lang de    # German messages (or BOOST_LANG=de); words work in both
 
 Type `help` for the commands, `raw` for grown-up commands, `exit` to stop.
 German: `hilfe`, `roh`, `ende`; `sprache deutsch` / `language english` switches messages.
@@ -18,12 +18,12 @@ import sys
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from lego_boost.commands import PORTS, RAW, TURN_WORDS, canonical, words
-from lego_boost.i18n import DE, LANGS, color_word, color_words, default_lang, normalize, t
-from lego_boost.kid import COLORS, Robot
-from lego_boost.session import CONNECTED, Session
+from hubbit.commands import PORTS, RAW, TURN_WORDS, canonical, words
+from hubbit.i18n import DE, LANGS, color_word, color_words, default_lang, normalize, t
+from hubbit.kid import COLORS, Robot
+from hubbit.session import CONNECTED, Session
 
-HISTORY_FILE = Path.home() / ".lego_boost_history"
+HISTORY_FILE = Path.home() / ".hubbit_history"
 
 
 def status_text(session: Session) -> str:
@@ -122,7 +122,7 @@ def _run_prompt(session: Session, history: Path | None) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="boost-console",
+        prog="hubbit-console",
         description="Drive the LEGO BOOST robot by typing commands. Type 'help' inside.",
     )
     parser.add_argument("--address", help="hub address (default: $BOOST_HUB_ADDRESS, .env or scan)")
@@ -143,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
         return session.lang if session is not None else args.lang
 
     if args.simulate:
-        from lego_boost.sim import sim_robot
+        from hubbit.sim import sim_robot
 
         def connect() -> Robot:
             return sim_robot(say, lang())

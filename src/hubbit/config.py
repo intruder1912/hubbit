@@ -1,6 +1,6 @@
 """Per-machine settings in a `.env` file in the project folder (no extra dependency).
 
-    BOOST_HUB_ADDRESS=00:16:53:AB:CD:EF    # written by `boost-scan --save`
+    BOOST_HUB_ADDRESS=00:16:53:AB:CD:EF    # written by `hubbit-scan --save`
     BOOST_LANG=de
     BOOST_TRIM=5                           # left wheel 5% slower (see kid.py)
 
@@ -16,7 +16,7 @@ from pathlib import Path
 
 ENV_NAME = ".env"
 ENV_OVERRIDE = "LEGO_BOOST_ENV_FILE"
-PROJECT_ROOT = Path(__file__).resolve().parents[2]  # src/lego_boost/config.py -> repo
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  # src/hubbit/config.py -> repo
 
 
 def env_path() -> Path:

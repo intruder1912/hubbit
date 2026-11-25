@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from lego_boost import hub as hub_mod
-from lego_boost.scan import FoundHub
+from hubbit import hub as hub_mod
+from hubbit.scan import FoundHub
 
 
 class FakeMotor:
@@ -69,7 +69,7 @@ def test_boost_stops_motors_on_ctrl_c(monkeypatch):
 def test_robot_stops_motors_on_ctrl_c(monkeypatch):
     from types import SimpleNamespace
 
-    from lego_boost import kid
+    from hubbit import kid
 
     fake = FakeHub()
     fake.led = SimpleNamespace(set_color=lambda color: None)
@@ -82,7 +82,7 @@ def test_robot_stops_motors_on_ctrl_c(monkeypatch):
 def test_robot_lets_other_errors_through(monkeypatch):
     from types import SimpleNamespace
 
-    from lego_boost import kid
+    from hubbit import kid
 
     fake = FakeHub()
     fake.led = SimpleNamespace(set_color=lambda color: None)
@@ -151,7 +151,7 @@ def test_safe_shutdown_skips_the_hub_when_the_link_is_gone():
 def test_unknown_peripheral_warning_is_filtered(caplog):
     import logging
 
-    from lego_boost.hub import quiet_pylgbst_logs
+    from hubbit.hub import quiet_pylgbst_logs
 
     quiet_pylgbst_logs()
     quiet_pylgbst_logs()  # idempotent

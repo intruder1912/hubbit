@@ -1,7 +1,7 @@
 """Connect to a Move Hub and always clean up (motors stopped, BLE closed).
 
 Usage:
-    from lego_boost import boost
+    from hubbit import boost
 
     with boost() as hub:
         hub.led.set_color(COLOR_GREEN)
@@ -19,8 +19,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from types import SimpleNamespace
 
-from lego_boost.config import load_env
-from lego_boost.scan import MOVE_HUB_NAME, find_hub
+from hubbit.config import load_env
+from hubbit.scan import MOVE_HUB_NAME, find_hub
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def resolve_address(address: str | None = None, timeout: float = 15.0) -> str:
         if found is None:
             raise HubNotFoundError(
                 f"Move Hub {address} not seen within {timeout:.0f}s. Is it switched on "
-                "(blinking LED)? A different hub? Run 'boost-scan --save' to update .env, "
+                "(blinking LED)? A different hub? Run 'hubbit-scan --save' to update .env, "
                 f"or unset {ENV_ADDRESS}."
             )
         return found.address
@@ -77,10 +77,10 @@ def patch_pylgbst() -> None:
 
     1. A failed BLE connect (BlueZ: "failed to discover services" right after the hub was
        switched back on) ends pylgbst's connection thread with a full traceback on stderr,
-       which garbles boost-tui. Log one line instead; connect() then reports and retries.
+       which garbles hubbit-tui. Log one line instead; connect() then reports and retries.
     2. A vision sensor reading sent just before a mode switch is decoded with the new
        mode's layout (1 byte where 4 are expected) -> AssertionError traceback (seen on
-       Kali in boost-tui). Drop such stale readings.
+       Kali in hubbit-tui). Drop such stale readings.
 
     The macOS `find_device(service_uuids=...)` and `MsgHubAction.is_reply` workarounds
     were dropped once their upstream fixes were pinned (undera/pylgbst#142, #144).
@@ -89,7 +89,7 @@ def patch_pylgbst() -> None:
     from pylgbst.peripherals import VisionSensor
 
     original_thread = BleakDriver._bleak_thread
-    if not getattr(original_thread, "_lego_boost_patched", False):
+    if not getattr(original_thread, "_hubbit_patched", False):
 
         async def _bleak_thread(self):
             try:
@@ -97,11 +97,11 @@ def patch_pylgbst() -> None:
             except Exception as exc:  # noqa: BLE001 - the thread ends either way
                 log.warning("Bluetooth connection failed: %s", exc)
 
-        _bleak_thread._lego_boost_patched = True
+        _bleak_thread._hubbit_patched = True
         BleakDriver._bleak_thread = _bleak_thread
 
     original_handle = VisionSensor._handle_port_data
-    if not getattr(original_handle, "_lego_boost_patched", False):
+    if not getattr(original_handle, "_hubbit_patched", False):
 
         def _handle_port_data(self, msg):
             mode = getattr(self._port_mode, "mode", None)
@@ -110,7 +110,7 @@ def patch_pylgbst() -> None:
                 return
             original_handle(self, msg)
 
-        _handle_port_data._lego_boost_patched = True
+        _handle_port_data._hubbit_patched = True
         VisionSensor._handle_port_data = _handle_port_data
 
 
@@ -164,7 +164,7 @@ def _set_up_hub(addr: str):
         except Exception as exc:  # noqa: BLE001 - reported below
             result["error"] = exc
 
-    thread = threading.Thread(target=build, daemon=True, name="lego-boost connect")
+    thread = threading.Thread(target=build, daemon=True, name="hubbit connect")
     thread.start()
     deadline = time.monotonic() + CONNECT_TIMEOUT
     was_alive = False

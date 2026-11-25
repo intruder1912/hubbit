@@ -26,17 +26,17 @@ jobs:
       - run: uv run pytest -q
       - name: Smoke test entry points
         run: |
-          uv run boost-scan --help
-          uv run boost-console --help
-          uv run boost-tui --help
+          uv run hubbit-scan --help
+          uv run hubbit-console --help
+          uv run hubbit-tui --help
       - name: Smoke test simulated console session
         shell: bash
         run: |
-          printf 'forward 0.2\nled red\nraw\nmotor A 30 0.2\nbattery\nexit\n' | uv run boost-console --simulate
-          printf 'vor 0.2\nlicht rot\nroh\nwinkel A 90\nbatterie\nende\n' | uv run boost-console --simulate --lang de
+          printf 'forward 0.2\nled red\nraw\nmotor A 30 0.2\nbattery\nexit\n' | uv run hubbit-console --simulate
+          printf 'vor 0.2\nlicht rot\nroh\nwinkel A 90\nbatterie\nende\n' | uv run hubbit-console --simulate --lang de
       - name: Smoke test Windows launcher
         if: runner.os == 'Windows'
         shell: cmd
         env:
-          LEGO_BOOST_NO_PAUSE: "1"
-        run: call windows\_run.cmd boost-scan --help
+          HUBBIT_NO_PAUSE: "1"
+        run: call windows\_run.cmd hubbit-scan --help

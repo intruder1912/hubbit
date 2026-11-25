@@ -1,6 +1,6 @@
 """A very simple robot API for young programmers.
 
-    from lego_boost.kid import Robot
+    from hubbit.kid import Robot
 
     with Robot() as robot:
         robot.light("green")
@@ -25,9 +25,9 @@ import math
 import os
 import time
 
-from lego_boost.config import load_env
-from lego_boost.hub import connect, link_alive, safe_shutdown
-from lego_boost.i18n import DE, EN, color_to_english, color_word, color_words, t
+from hubbit.config import load_env
+from hubbit.hub import connect, link_alive, safe_shutdown
+from hubbit.i18n import DE, EN, color_to_english, color_word, color_words, t
 
 COLORS = {
     "off": 0x00,

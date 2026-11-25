@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from lego_boost import console, i18n
-from lego_boost.commands import RAW, SIMPLE, Command, ParseError, help_text, parse, words
-from lego_boost.kid import COLORS, Roboter
-from lego_boost.session import Session
-from lego_boost.sim import SimHub, sim_robot
+from hubbit import console, i18n
+from hubbit.commands import RAW, SIMPLE, Command, ParseError, help_text, parse, words
+from hubbit.kid import COLORS, Roboter
+from hubbit.session import Session
+from hubbit.sim import SimHub, sim_robot
 
 UE, SZ = chr(0xFC), chr(0xDF)  # u-umlaut, sharp s (source literals stay ASCII)
 
@@ -195,7 +195,7 @@ def test_roboter_german_aliases(capsys):
     assert motor.calls[0] == (2, 0.35, 0.35)
     assert motor.calls[1] == (1, -0.2, -0.2)
     assert motor.calls[2][1:] == (-0.5, 0.5)
-    from lego_boost.kid import turn_seconds
+    from hubbit.kid import turn_seconds
 
     assert motor.calls[3][0] == pytest.approx(turn_seconds(45))
     leds = []
@@ -219,7 +219,7 @@ def test_german_missions_follow_the_kids_rules(path):
     assert len(text.splitlines()) < 30
     for header in ("# Mission", "So startest du:", "Probier mal:"):
         assert header in text
-    assert "from lego_boost.kid import Roboter" in text
+    assert "from hubbit.kid import Roboter" in text
     assert "lambda" not in text and "class " not in text and "async " not in text
     compile(text, str(path), "exec")
 

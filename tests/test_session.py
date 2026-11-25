@@ -4,9 +4,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from lego_boost import kid
-from lego_boost.kid import Robot
-from lego_boost.session import CLOSED, CONNECTED, DISCONNECTED, Session
+from hubbit import kid
+from hubbit.kid import Robot
+from hubbit.session import CLOSED, CONNECTED, DISCONNECTED, Session
 
 
 class FakeMotor:
@@ -268,7 +268,7 @@ def test_hold_keeps_driving_while_repeated_and_stops_after(make):
 
 
 def test_tapped_turns_are_short_pulses(make):
-    from lego_boost.session import TAP_TURN_SECONDS
+    from hubbit.session import TAP_TURN_SECONDS
 
     session, hubs, _ = make()
     hubs[0].motor_AB = motor = SpeedMotor()

@@ -6,7 +6,7 @@
 #               (turn_right() is a quarter turn. turn_right(0.2) turns less,
 #               turn_right(0.7) turns about half way round.)
 
-from lego_boost.kid import Robot
+from hubbit.kid import Robot
 
 with Robot() as robot:
     for side in range(4):

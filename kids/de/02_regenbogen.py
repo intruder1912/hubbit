@@ -3,7 +3,7 @@
 # So startest du:  uv run kids/de/02_regenbogen.py
 # Probier mal:     mach es schneller: ändere 0.3 in 0.1, oder ändere 3 in 10.
 
-from lego_boost.kid import Roboter
+from hubbit.kid import Roboter
 
 regenbogen = ["rot", "orange", "gelb", "gruen", "blau", "lila"]
 

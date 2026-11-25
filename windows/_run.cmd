@@ -1,7 +1,7 @@
 @echo off
 rem Helper for the double-click launchers in this folder.
 rem Runs "uv run <arguments>" from the project folder and keeps the window open.
-rem Set LEGO_BOOST_NO_PAUSE=1 to skip the final pause (used by CI).
+rem Set HUBBIT_NO_PAUSE=1 to skip the final pause (used by CI).
 setlocal
 cd /d "%~dp0.."
 where uv >nul 2>nul
@@ -14,5 +14,5 @@ if errorlevel 1 (
 uv run %*
 set RC=%ERRORLEVEL%
 :end
-if not defined LEGO_BOOST_NO_PAUSE pause
+if not defined HUBBIT_NO_PAUSE pause
 exit /b %RC%

@@ -1,6 +1,6 @@
 import pytest
 
-from lego_boost.kid import COLOR_NAMES, COLORS, Robot, _speed
+from hubbit.kid import COLOR_NAMES, COLORS, Robot, _speed
 
 
 def test_speed_is_clamped_and_scaled():
@@ -32,7 +32,7 @@ class RecordingMotor:
 def test_default_turn_is_calibrated_quarter_turn():
     from types import SimpleNamespace
 
-    from lego_boost import kid
+    from hubbit import kid
 
     robot = Robot()
     robot.hub = SimpleNamespace(motor_AB=RecordingMotor())
@@ -47,7 +47,7 @@ def test_default_turn_is_calibrated_quarter_turn():
 def test_turn_by_degrees_and_hub_helpers():
     from types import SimpleNamespace
 
-    from lego_boost import kid
+    from hubbit import kid
 
     robot = Robot()
     robot.hub = SimpleNamespace(
@@ -67,7 +67,7 @@ def test_turn_by_degrees_and_hub_helpers():
 
 
 def test_trim_slows_only_one_wheel():
-    from lego_boost.kid import trimmed
+    from hubbit.kid import trimmed
 
     assert trimmed(0.5, 0.5, 0) == (0.5, 0.5)
     assert trimmed(0.5, 0.5, 10) == (0.45, 0.5)  # left slower: robot drifted right
@@ -75,7 +75,7 @@ def test_trim_slows_only_one_wheel():
 
 
 def test_trim_from_env(monkeypatch, capsys):
-    from lego_boost.kid import read_trim
+    from hubbit.kid import read_trim
 
     assert read_trim() == 0
     monkeypatch.setenv("BOOST_TRIM", "4,5")
@@ -91,7 +91,7 @@ def test_trim_from_env(monkeypatch, capsys):
 def test_robot_drives_with_trim(monkeypatch):
     from types import SimpleNamespace
 
-    from lego_boost import kid
+    from hubbit import kid
 
     monkeypatch.setenv("BOOST_TRIM", "10")
     robot = Robot()
@@ -104,7 +104,7 @@ def test_robot_drives_with_trim(monkeypatch):
 
 
 def test_turn_seconds_has_start_up_time():
-    from lego_boost import kid
+    from hubbit import kid
 
     # hardware measurements 2026-11-21/22 (Vernie, hard floor): seconds -> degrees
     for seconds, degrees in [(0.19, 30), (0.35, 79), (0.38, 85), (0.5, 130), (0.76, 205)]:
@@ -115,7 +115,7 @@ def test_turn_seconds_has_start_up_time():
 
 
 def test_close_can_skip_the_goodbye(monkeypatch, capsys):
-    from lego_boost import kid
+    from hubbit import kid
 
     closed = []
     monkeypatch.setattr(kid, "safe_shutdown", closed.append)
@@ -130,7 +130,7 @@ def test_close_can_skip_the_goodbye(monkeypatch, capsys):
 def test_see_color_waits_for_a_stable_colour():
     from types import SimpleNamespace
 
-    from lego_boost import kid
+    from hubbit import kid
 
     now = [0.0]
     robot = Robot()

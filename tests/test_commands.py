@@ -1,6 +1,6 @@
 import pytest
 
-from lego_boost.commands import RAW, SIMPLE, Command, ParseError, help_text, parse, words
+from hubbit.commands import RAW, SIMPLE, Command, ParseError, help_text, parse, words
 
 
 @pytest.mark.parametrize(

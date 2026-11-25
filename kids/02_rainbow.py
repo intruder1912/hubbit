@@ -3,7 +3,7 @@
 # How to run:   uv run kids/02_rainbow.py
 # Try this:     make it faster by changing 0.3 to 0.1, or change 3 to 10.
 
-from lego_boost.kid import Robot
+from hubbit.kid import Robot
 
 rainbow = ["red", "orange", "yellow", "green", "blue", "purple"]
 

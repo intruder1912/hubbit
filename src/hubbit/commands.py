@@ -1,7 +1,7 @@
 """Typed robot commands: turn a line like "forward 2" into a `Command`.
 
 Pure logic, no hub access - the console's `Session` runs the commands. Used by
-`boost-console` (and later the TUI).
+`hubbit-console` (and later the TUI).
 
     >>> parse("Forward 1,5")
     Command(name='forward', args=(1.5,))
@@ -14,7 +14,7 @@ Pure logic, no hub access - the console's `Session` runs the commands. Used by
 
 Simple commands work in both modes; raw commands only after typing `raw`.
 English and German words always both work (`Spec.aliases`, `Spec.de`); `lang` only picks
-the language of messages and help (see `lego_boost.i18n`). Colours come back as English
+the language of messages and help (see `hubbit.i18n`). Colours come back as English
 names (`kid.COLORS`).
 """
 
@@ -24,7 +24,7 @@ import difflib
 import math
 from dataclasses import dataclass
 
-from lego_boost.i18n import (
+from hubbit.i18n import (
     COLORS_DE,
     DE,
     EN,
@@ -34,7 +34,7 @@ from lego_boost.i18n import (
     normalize,
     t,
 )
-from lego_boost.kid import COLORS, DEFAULT_SPEED
+from hubbit.kid import COLORS, DEFAULT_SPEED
 
 SIMPLE = "simple"
 RAW = "raw"

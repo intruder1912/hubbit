@@ -5,11 +5,11 @@ import os
 
 import pytest
 
-from lego_boost import config
-from lego_boost import hub as hub_mod
-from lego_boost.scan import FoundHub
+from hubbit import config
+from hubbit import hub as hub_mod
+from hubbit.scan import FoundHub
 
-scan_mod = importlib.import_module("lego_boost.scan")  # the package exports a scan()
+scan_mod = importlib.import_module("hubbit.scan")  # the package exports a scan()
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_save_value_replaces_or_appends_and_keeps_comments(env_file):
 
 
 def test_default_lang_comes_from_the_file(env_file):
-    from lego_boost.i18n import default_lang
+    from hubbit.i18n import default_lang
 
     env_file.write_text("BOOST_LANG=de\n", encoding="utf-8")
     assert default_lang() == "de"
@@ -80,7 +80,7 @@ def test_without_save_it_only_gives_a_tip(env_file, monkeypatch, capsys):
     monkeypatch.setattr(scan_mod, "scan", lambda timeout: [hub])
     assert scan_mod.main([]) == 0
     assert not env_file.exists()
-    assert "boost-scan --save" in capsys.readouterr().out
+    assert "hubbit-scan --save" in capsys.readouterr().out
 
 
 def test_saved_address_is_waited_for_with_a_timeout(env_file, monkeypatch):
@@ -96,7 +96,7 @@ def test_saved_address_is_waited_for_with_a_timeout(env_file, monkeypatch):
     with pytest.raises(hub_mod.HubNotFoundError) as err:
         hub_mod.resolve_address(timeout=0.1)
     assert calls == [(0.1, "aa:bb:cc:dd:ee:ff")]
-    assert "boost-scan --save" in str(err.value)
+    assert "hubbit-scan --save" in str(err.value)
 
     found = FoundHub("LEGO Move Hub", "AA:BB:CC:DD:EE:FF", -40)
     monkeypatch.setattr(hub_mod, "find_hub", lambda timeout, address=None: found)

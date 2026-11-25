@@ -6,7 +6,7 @@
 #                  (rechts() ist eine Vierteldrehung. rechts(0.2) dreht weniger,
 #                  rechts(0.7) dreht ungefähr eine halbe Runde.)
 
-from lego_boost.kid import Roboter
+from hubbit.kid import Roboter
 
 with Roboter() as roboter:
     for seite in range(4):

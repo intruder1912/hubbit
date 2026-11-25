@@ -31,10 +31,10 @@ Per-OS Bluetooth notes: [macOS](docs/setup-macos.md) · [Linux](docs/setup-linux
 - **Cross-platform:** the same code must run on macOS, Linux and Windows. bleak is the only
   Bluetooth backend; no OS-specific paths or shell tricks in Python code.
 - **Printed text is ASCII-only** (old Windows consoles); `tests/test_portability.py` checks it.
-- **Kids track** (`kids/`): short scripts (< 30 lines), only `lego_boost.kid.Robot`, a comment
+- **Kids track** (`kids/`): short scripts (< 30 lines), only `hubbit.kid.Robot`, a comment
   header with "Mission", "How to run", "Try this", and no advanced Python (no classes, lambdas,
   async).
-- New logic in `src/lego_boost/` comes with a unit test (fake hubs, see `tests/`).
+- New logic in `src/hubbit/` comes with a unit test (fake hubs, see `tests/`).
 - GitHub Actions are pinned to commit SHAs (with the version as a comment); Dependabot
   updates them. Please keep new actions pinned the same way.
 - pylgbst is pinned to a git commit on purpose (see `pyproject.toml`). Please don't change it

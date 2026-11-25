@@ -37,7 +37,7 @@ Scopes are optional: `hub`, `kid`, `console`, `tui`, `scan`, `kids`, `windows`, 
    builds sdist + wheel, attests their provenance and creates the GitHub Release with the
    changelog section as notes.
 
-Check a downloaded file: `gh attestation verify lego_boost-X.Y.Z-py3-none-any.whl --repo intruder1912/lego-boost`.
+Check a downloaded file: `gh attestation verify hubbit-X.Y.Z-py3-none-any.whl --repo intruder1912/hubbit`.
 
 ## Why not PyPI (yet)
 

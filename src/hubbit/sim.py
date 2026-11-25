@@ -1,14 +1,14 @@
 """A pretend Move Hub: prints what the motors and the light would do. No Bluetooth needed.
 
-Used by `boost-console --simulate` (practice without the robot, and CI smoke tests).
+Used by `hubbit-console --simulate` (practice without the robot, and CI smoke tests).
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
-from lego_boost.i18n import EN, t
-from lego_boost.kid import COLOR_NAMES, Robot
+from hubbit.i18n import EN, t
+from hubbit.kid import COLOR_NAMES, Robot
 
 
 class SimMotor:

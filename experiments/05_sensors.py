@@ -9,7 +9,7 @@ import time
 
 from pylgbst.peripherals import COLORS, TiltSensor
 
-from lego_boost import boost
+from hubbit import boost
 
 DURATION = 15
 

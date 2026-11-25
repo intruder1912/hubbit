@@ -1,4 +1,4 @@
-# lego-boost — guide for Claude Code
+# hubbit — guide for Claude Code
 
 Python experiments controlling a **LEGO BOOST Move Hub (17101 / 88006)** over Bluetooth LE
 with [pylgbst](https://github.com/undera/pylgbst), without the LEGO app. Used on macOS
@@ -8,9 +8,9 @@ with [pylgbst](https://github.com/undera/pylgbst), without the LEGO app. Used on
 
 ```bash
 uv sync                          # create/update .venv (Python 3.12 pinned in .python-version)
-uv run boost-scan                # find hubs, print addresses (needs hub switched on)
-uv run boost-console             # interactive console (--simulate: no hub needed)
-uv run boost-tui                 # full-screen button window (textual), same session core
+uv run hubbit-scan               # find hubs, print addresses (needs hub switched on)
+uv run hubbit-console            # interactive console (--simulate: no hub needed)
+uv run hubbit-tui                # full-screen button window (textual), same session core
 uv run experiments/02_hub_info.py
 uv run kids/01_hello_light.py
 uv run pytest                    # unit tests — no hardware needed
@@ -21,9 +21,9 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 
 ## Layout
 
-- `src/lego_boost/` — small helper package
+- `src/hubbit/` — small helper package
   - `scan.py`: own BLE scan **with timeout** (pylgbst's discovery blocks forever); a known
-    address is waited for with it too. `boost-scan --save` writes the address into `.env`
+    address is waited for with it too. `hubbit-scan --save` writes the address into `.env`
   - `config.py`: per-machine `.env` (BOOST_HUB_ADDRESS, BOOST_LANG, BOOST_TRIM; shell variables win).
     Claude cannot read `.env*` (sandbox/permission deny) - ask the user what is in it
   - `hub.py`: `connect()`, `boost()` context manager, `safe_shutdown()` (stops motors, times out)
@@ -31,8 +31,8 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
   - `commands.py`: text command parser for the console (aliases, limits, help) — pure logic
   - `session.py`: long-running console session — worker thread, `stop`, watchdog, reconnect.
     **Only the worker thread talks to the hub** (pylgbst allows one pending request).
-  - `console.py`: `boost-console` (prompt_toolkit; plain line mode when stdin is not a TTY)
-  - `tui.py`: `boost-tui` (textual). Buttons/keys/command line all go through
+  - `console.py`: `hubbit-console` (prompt_toolkit; plain line mode when stdin is not a TTY)
+  - `tui.py`: `hubbit-tui` (textual). Buttons/keys/command line all go through
     `Session.handle`; tested headless with textual's `Pilot` (`tests/test_tui.py`)
     Live sensor panel = `Session(poll=...)`: the idle worker refreshes cached readings
     (battery only every 30 s); polls are never queued, so they never delay a command
@@ -63,17 +63,17 @@ Always use `uv run` / `uv add`; never `pip install` into the venv by hand.
 - **No real hub addresses** (MAC / CoreBluetooth UUID) in committed files, issues or PRs:
   write `00:16:53:XX:XX:XX`. They identify a device in the user's home.
 - **Printed text is ASCII-only** (Windows code pages); `tests/test_portability.py` checks it.
-- **Kids track:** short scripts (< 30 lines), only `lego_boost.kid.Robot`, a comment header
+- **Kids track:** short scripts (< 30 lines), only `hubbit.kid.Robot`, a comment header
   with "Mission", "How to run", "Try this" (German: `Roboter`, "So startest du",
   "Probier mal"; new or changed missions go into both languages, each with a launcher). No advanced Python (no lambdas, classes, async).
 - New experiment: next free number, docstring with purpose / run command / hardware needs.
-  Add a unit test when you add logic to `src/lego_boost/`.
+  Add a unit test when you add logic to `src/hubbit/`.
 
 ## Sandbox and permissions
 
 `.claude/settings.json` allows the usual uv/git/gh PR commands, asks before `gh api` and
 label/repo changes, and denies force pushes and pushes to `main`. In the sandbox:
-`gh` and the hardware commands (`boost-scan`, `boost-console`, `boost-tui`, `experiments/`,
+`gh` and the hardware commands (`hubbit-scan`, `hubbit-console`, `hubbit-tui`, `experiments/`,
 `kids/`) run
 outside it (`excludedCommands`: gh fails TLS checks inside, Bluetooth is unavailable inside);
 PyPI and GitHub hosts are allowed. An exclusion only applies when **every** part of a command

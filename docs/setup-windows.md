@@ -18,17 +18,17 @@ recognised by Windows works; no extra dongle needed.
    and back in once** so Explorer sees the new `PATH`.
 3. Install Git (`winget install Git.Git`), then:
    ```powershell
-   git clone https://github.com/intruder1912/lego-boost.git
-   cd lego-boost
+   git clone https://github.com/intruder1912/hubbit.git
+   cd hubbit
    uv sync
-   uv run boost-scan
+   uv run hubbit-scan
    uv run kids/01_hello_light.py
    ```
 
 ## Hub address (optional, saves the scan)
 
-`boost-scan` prints the hub's address (a MAC like `00:16:53:AB:CD:EF` on Windows).
-`uv run boost-scan --save` (or double-clicking `windows\scan.cmd`) remembers it in the
+`hubbit-scan` prints the hub's address (a MAC like `00:16:53:AB:CD:EF` on Windows).
+`uv run hubbit-scan --save` (or double-clicking `windows\scan.cmd`) remembers it in the
 project's `.env` file, so every script and launcher uses that hub from then on. Press the
 green button before each connection anyway: the hub only connects while it blinks.
 
@@ -46,11 +46,11 @@ in Explorer: a window opens, runs the script with the project's Python, and stay
 at the end ("Press any key ...") so the output can be read. Press the hub's green button
 **right before** double-clicking (it only advertises for ~10 s).
 
-`console.cmd` starts the typing console (`boost-console`): the hub stays connected until
+`console.cmd` starts the typing console (`hubbit-console`): the hub stays connected until
 `exit`, so there is no need to press the green button again for every command.
 `console-practice.cmd` runs the same console without a hub (`--simulate`).
 
-`tui.cmd` opens the button window (`boost-tui`: big buttons, arrow keys, STOP), and
+`tui.cmd` opens the button window (`hubbit-tui`: big buttons, arrow keys, STOP), and
 `tui-practice.cmd` runs it without a hub. It looks best in **Windows Terminal** (default on
 Windows 11); the old console window works but with plainer colours.
 
@@ -64,18 +64,18 @@ a shortcut.
 ## Kid-friendly editor
 
 Both editors must use the project's Python in `.venv` (created by `uv sync`), otherwise
-`import lego_boost` fails.
+`import hubbit` fails.
 
 **Thonny** ([thonny.org](https://thonny.org/))
 1. Tools → Options → Interpreter → "Alternative Python 3 interpreter or virtual environment".
-2. Python executable: `<lego-boost folder>\.venv\Scripts\python.exe` → OK.
+2. Python executable: `<hubbit folder>\.venv\Scripts\python.exe` → OK.
 3. Open e.g. `kids\01_hello_light.py`, press the green button on the hub, then **Run (F5)**.
 4. To stop a running mission use the red **Stop** button (or Ctrl+C in the shell pane).
    Stop halts the motors and disconnects cleanly (checked on hardware in #4), without a
    traceback.
 
 **VS Code**
-1. Install the Python extension, open the `lego-boost` folder.
+1. Install the Python extension, open the `hubbit` folder.
 2. Ctrl+Shift+P → "Python: Select Interpreter" → `.venv\Scripts\python.exe`.
 3. Open a mission and click ▶ (Run Python File). Stop with Ctrl+C in the terminal.
 
