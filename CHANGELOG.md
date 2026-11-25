@@ -5,6 +5,26 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
 [Conventional Commits](https://www.conventionalcommits.org/) with git-cliff
 (see `docs/releasing.md`).
 
+## [0.3.0] - 2026-11-25
+
+Finishes the rename to hubbit (#47): the old names are gone. Plus three fixes from the
+smoke test after the rename.
+
+### Breaking changes
+- `import lego_boost` and the `boost-scan` / `boost-console` / `boost-tui` commands were
+  removed (#57). Use `hubbit` and `hubbit-scan` / `hubbit-console` / `hubbit-tui`; run
+  `uv sync` to drop the old commands from `.venv`. Unchanged: the `BOOST_*` variables in
+  `.env`, `boost()`, `Robot` / `Roboter`.
+
+### Bug Fixes
+- **kids:** a mission that can't reach the hub (not found, connection failed, Bluetooth off,
+  Ctrl+C while connecting) prints one short line and exits instead of a traceback (#54).
+  `Robot.open()` still raises with the details; the console and TUI use it.
+- **kids:** German missions and the German console print the connect lines in German too
+  ("Suche den Move Hub ...") (#55).
+- **tui:** no `NoMatches` error when the status update runs while the window closes; this
+  also fixes flaky TUI tests in CI (#56).
+
 ## [0.2.0] - 2026-11-25
 
 The project is now called **hubbit** (#47). LEGO's Fair Play guidelines ask third parties

@@ -1,6 +1,6 @@
 [project]
 name = "hubbit"
-version = "0.2.0"
+version = "0.3.0"
 description = "Unofficial experiments with LEGO BOOST (Move Hub 88006) from Python via pylgbst - no LEGO app needed."
 readme = "README.md"
 license = "MIT"
