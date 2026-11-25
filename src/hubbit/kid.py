@@ -121,7 +121,7 @@ class Robot:
     # --- connection -------------------------------------------------------
     def open(self) -> Robot:
         """Connect (what `with Robot()` does). Raises if there is no hub (console, TUI)."""
-        self.hub = connect(self._address)
+        self.hub = connect(self._address, lang=self.lang)
         print(self._t("robot_connected"))
         self.light("green")
         return self

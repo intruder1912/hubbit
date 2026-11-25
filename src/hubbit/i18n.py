@@ -190,6 +190,8 @@ MESSAGES = {
         "tui_keys": "Arrows: drive   Space/Esc: STOP   F1: help   Ctrl+Q: quit",
         "tui_banner": "Ready! Click the buttons, use the arrow keys, or type 'help'.",
         # robot (kid.py, sim.py)
+        "looking_for_hub": "Looking for the Move Hub ... press its green button.",
+        "connect_retry": "Connection failed. Press the green button again - trying once more ...",
         "robot_connected": "Robot connected!",
         "robot_connected_sim": "Robot connected! (simulated - no hub needed)",
         "robot_bye": "Robot stopped. Bye!",
@@ -272,6 +274,11 @@ MESSAGES = {
         "tui_battery": "Batterie",
         "tui_keys": "Pfeile: fahren   Leertaste/Esc: STOPP   F1: Hilfe   Strg+Q: Ende",
         "tui_banner": "Los geht's! Klick die Knoepfe, nimm die Pfeiltasten oder tippe 'hilfe'.",
+        "looking_for_hub": "Suche den Move Hub ... drueck den gruenen Knopf am Hub.",
+        "connect_retry": (
+            "Verbindung fehlgeschlagen. Drueck nochmal den gruenen Knopf - "
+            "ich versuche es noch einmal ..."
+        ),
         "robot_connected": "Roboter verbunden!",
         "robot_connected_sim": "Roboter verbunden! (nur simuliert - kein Hub noetig)",
         "robot_bye": "Roboter angehalten. Tschuess!",

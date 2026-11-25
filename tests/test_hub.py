@@ -389,3 +389,31 @@ def test_robot_open_still_raises_for_the_console(monkeypatch):
     monkeypatch.setattr(kid, "connect", connect)
     with pytest.raises(hub_mod.HubNotFoundError):
         kid.Robot().open()
+
+
+def test_resolve_address_speaks_the_robots_language(monkeypatch, capsys):
+    monkeypatch.delenv(hub_mod.ENV_ADDRESS, raising=False)
+    monkeypatch.setattr(hub_mod, "find_hub", lambda timeout, address=None: None)
+    with pytest.raises(hub_mod.HubNotFoundError):
+        hub_mod.resolve_address(timeout=0.1, lang="de")
+    out = capsys.readouterr().out
+    assert "Suche den Move Hub" in out and "Looking" not in out
+
+
+def test_roboter_connects_in_german(monkeypatch):
+    from types import SimpleNamespace
+
+    from hubbit import kid
+
+    seen = {}
+    fake = FakeHub()
+    fake.led = SimpleNamespace(set_color=lambda color: None)
+
+    def connect(address=None, timeout=15.0, lang="en"):
+        seen["lang"] = lang
+        return fake
+
+    monkeypatch.setattr(kid, "connect", connect)
+    with kid.Roboter():
+        pass
+    assert seen["lang"] == "de"
