@@ -329,3 +329,63 @@ def test_linux_errors_point_to_the_reset_steps(monkeypatch):
     with pytest.raises(hub_mod.HubConnectError) as err:
         hub_mod.connect()
     assert "setup-linux" not in str(err.value)
+
+
+@pytest.mark.parametrize(
+    ("error", "lang", "expected"),
+    [
+        (hub_mod.HubNotFoundError("Move Hub 00:16:53:XX:XX:XX not seen"), "en", "not found"),
+        (hub_mod.HubConnectError("setup failed"), "en", "could not connect"),
+        (hub_mod.HubNotFoundError("nothing"), "de", "nicht gefunden"),
+    ],
+)
+def test_robot_hub_missing_is_one_friendly_line(monkeypatch, capsys, error, lang, expected):
+    from hubbit import kid
+
+    def connect(*a, **k):
+        raise error
+
+    monkeypatch.setattr(kid, "connect", connect)
+    robot_cls = kid.Roboter if lang == "de" else kid.Robot
+    with pytest.raises(SystemExit) as exit_info, robot_cls():
+        raise AssertionError("the mission body must not run without a hub")
+    assert exit_info.value.code == 1
+    out = capsys.readouterr().out
+    assert expected in out.lower()
+    assert "Traceback" not in out and str(error) not in out  # no adult details for kids
+
+
+def test_robot_bluetooth_off_shows_the_hint(monkeypatch, capsys):
+    from hubbit import kid
+    from hubbit.scan import BluetoothUnavailableError
+
+    def connect(*a, **k):
+        raise BluetoothUnavailableError("Bluetooth is switched off or blocked.")
+
+    monkeypatch.setattr(kid, "connect", connect)
+    with pytest.raises(SystemExit), kid.Robot():
+        pass
+    assert "Bluetooth is switched off or blocked." in capsys.readouterr().out
+
+
+def test_robot_ctrl_c_while_connecting(monkeypatch, capsys):
+    from hubbit import kid
+
+    def connect(*a, **k):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(kid, "connect", connect)
+    with pytest.raises(SystemExit), kid.Robot():
+        pass
+    assert "Ctrl+C" in capsys.readouterr().out
+
+
+def test_robot_open_still_raises_for_the_console(monkeypatch):
+    from hubbit import kid
+
+    def connect(*a, **k):
+        raise hub_mod.HubNotFoundError("nothing")
+
+    monkeypatch.setattr(kid, "connect", connect)
+    with pytest.raises(hub_mod.HubNotFoundError):
+        kid.Robot().open()

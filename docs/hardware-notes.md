@@ -183,3 +183,4 @@ Record what was verified on real hardware.
 | 2026-11-22 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ pylgbst pin `789a52e` without workarounds 1+2: stop mid-move, queued moves, hold-to-drive direction changes, stop while holding, tapped turns, raw `angle` + stop (no discarded-command errors); `02_hub_info` with upstream's `service_uuids` scan, clean disconnect |
 | | Ubuntu / Raspberry Pi OS | | pending |
 | 2026-11-24 | Windows (kids notebook), WinRT | 3.12.16 / 3.1.0 | ✅ setup, scan `--save`, missions 1–5 EN + DE (PowerShell, launchers, Thonny incl. Stop), console (all #13 checks), TUI; Ctrl+C traceback fixed (#43); disconnect ~5 s |
+| 2026-11-25 | macOS 27.2.1, Apple Silicon | 3.12 / 3.1.0 | ✅ after the rename to hubbit: `hubbit-scan`, mission 1, `boost-console` alias, `lego_boost` shim. A mission started after the ~10 s advertising window showed a `HubNotFoundError` traceback; now one friendly line, EN + DE (#52) |

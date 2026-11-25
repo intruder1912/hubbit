@@ -62,7 +62,7 @@ def completions(session: Session, text_before_cursor: str) -> list[str]:
 
 def _connect_hub(address: str | None, session_lang: Callable[[], str]) -> Callable[[], Robot]:
     def connect() -> Robot:
-        return Robot(address, session_lang()).__enter__()
+        return Robot(address, session_lang()).open()
 
     return connect
 
