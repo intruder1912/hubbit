@@ -1,7 +1,7 @@
 [project]
 name = "lego-boost"
 version = "0.1.1"
-description = "Experiments with LEGO BOOST (Move Hub 88006) from Python via pylgbst - no LEGO app needed."
+description = "Unofficial experiments with LEGO BOOST (Move Hub 88006) from Python via pylgbst - no LEGO app needed."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10,<3.14"

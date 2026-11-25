@@ -2,7 +2,10 @@
 
 [![CI](https://github.com/intruder1912/lego-boost/actions/workflows/ci.yml/badge.svg)](https://github.com/intruder1912/lego-boost/actions/workflows/ci.yml)
 
-Experiments with the **LEGO BOOST Move Hub** (set 17101, hub 88006) from Python — no LEGO
+> **Unofficial.** LEGO® and BOOST are trademarks of the LEGO Group, which does not sponsor,
+> authorize or endorse this project.
+
+Experiments with the **LEGO® BOOST Move Hub** (set 17101, hub 88006) from Python — no LEGO
 app or tablet needed. Uses [pylgbst](https://github.com/undera/pylgbst) with the
 [bleak](https://github.com/hbldh/bleak) Bluetooth LE backend, so the same code runs on
 **macOS, Linux (incl. Raspberry Pi) and Windows**.
@@ -168,5 +171,5 @@ This project stands on the work of others:
 
 ## License
 
-MIT. LEGO® and BOOST are trademarks of the LEGO Group, which does not sponsor or endorse
-this project.
+MIT. LEGO® and BOOST are trademarks of the LEGO Group, which does not sponsor, authorize or
+endorse this project.
