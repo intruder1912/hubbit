@@ -2,7 +2,7 @@
 
 New issues from the issue forms arrive with `needs-triage` (and a `platform:*` label, added
 automatically from the form). Triage = look at the
-[`needs-triage` list](https://github.com/intruder1912/lego-boost/issues?q=is%3Aopen+label%3Aneeds-triage)
+[`needs-triage` list](https://github.com/intruder1912/hubbit/issues?q=is%3Aopen+label%3Aneeds-triage)
 and, for each issue, do one of the following:
 
 | Situation | Do this |

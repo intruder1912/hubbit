@@ -2,9 +2,9 @@ import io
 
 import pytest
 
-from lego_boost import console
-from lego_boost.session import CLOSED, Session
-from lego_boost.sim import sim_robot
+from hubbit import console
+from hubbit.session import CLOSED, Session
+from hubbit.sim import sim_robot
 
 
 @pytest.fixture

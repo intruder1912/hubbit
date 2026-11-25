@@ -17,4 +17,4 @@ body:
     id: area
     attributes:
       label: Area
-      options: [kids track, console / TUI, experiments, helpers (src/lego_boost), docs, CI / tooling, not sure]
+      options: [kids track, console / TUI, experiments, helpers (src/hubbit), docs, CI / tooling, not sure]

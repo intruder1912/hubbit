@@ -5,7 +5,7 @@
 # How to run:   uv run kids/05_remote_control.py
 # Try this:     add a new letter, e.g. "l" for a light show!
 
-from lego_boost.kid import Robot
+from hubbit.kid import Robot
 
 with Robot() as robot:
     while True:

@@ -5,7 +5,7 @@
 # Needs:        the color & distance sensor plugged in.
 # Try this:     make the robot drive forward when it sees green!
 
-from lego_boost.kid import Robot
+from hubbit.kid import Robot
 
 with Robot() as robot:
     print("Show me a color! (press Ctrl+C to stop)")

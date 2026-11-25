@@ -1,6 +1,6 @@
-# lego-boost
+# hubbit
 
-[![CI](https://github.com/intruder1912/lego-boost/actions/workflows/ci.yml/badge.svg)](https://github.com/intruder1912/lego-boost/actions/workflows/ci.yml)
+[![CI](https://github.com/intruder1912/hubbit/actions/workflows/ci.yml/badge.svg)](https://github.com/intruder1912/hubbit/actions/workflows/ci.yml)
 
 > **Unofficial.** LEGOÂ® and BOOST are trademarks of the LEGO Group, which does not sponsor,
 > authorize or endorse this project.
@@ -10,6 +10,12 @@ app or tablet needed. Uses [pylgbst](https://github.com/undera/pylgbst) with the
 [bleak](https://github.com/hbldh/bleak) Bluetooth LE backend, so the same code runs on
 **macOS, Linux (incl. Raspberry Pi) and Windows**.
 
+> **Renamed in 0.2.0:** this project used to be called `lego-boost` (#47). The old import
+> `lego_boost` and the old commands `boost-scan`, `boost-console`, `boost-tui` still work
+> until 0.3.0; change them to `hubbit` / `hubbit-scan` / `hubbit-console` / `hubbit-tui`.
+> An existing clone: `git remote set-url origin https://github.com/intruder1912/hubbit.git`,
+> then `uv sync`.
+
 ## Quickstart
 
 1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
@@ -17,13 +23,13 @@ app or tablet needed. Uses [pylgbst](https://github.com/undera/pylgbst) with the
    - Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
 2. Clone and set up (uv downloads Python 3.12 automatically):
    ```bash
-   git clone https://github.com/intruder1912/lego-boost.git
-   cd lego-boost
+   git clone https://github.com/intruder1912/hubbit.git
+   cd hubbit
    uv sync
    ```
 3. Switch on the hub (green button, LED blinks) and scan:
    ```bash
-   uv run boost-scan
+   uv run hubbit-scan
    ```
 4. Run an experiment:
    ```bash
@@ -40,7 +46,7 @@ OS-specific notes (Bluetooth permissions, BlueZ, etc.):
 |---|---|
 | `experiments/` | Numbered experiments: scan, hub info, LED, motors, sensors |
 | `kids/` | Simple "missions" for young programmers using a friendly `Robot` API (German: `kids/de/`) |
-| `src/lego_boost/` | Helpers: scan with timeout, safe connect/disconnect, kid API |
+| `src/hubbit/` | Helpers: scan with timeout, safe connect/disconnect, kid API |
 | `docs/` | Setup per OS, hardware notes, troubleshooting, workflow |
 | `windows/` | Double-click launchers for the kids missions on Windows |
 
@@ -48,7 +54,7 @@ OS-specific notes (Bluetooth permissions, BlueZ, etc.):
 
 ```python
 from pylgbst.peripherals import COLOR_GREEN
-from lego_boost import boost
+from hubbit import boost
 
 with boost() as hub:  # scans, connects, and always stops motors at the end
     hub.led.set_color(COLOR_GREEN)
@@ -58,7 +64,7 @@ with boost() as hub:  # scans, connects, and always stops motors at the end
 Kid version:
 
 ```python
-from lego_boost.kid import Robot
+from hubbit.kid import Robot
 
 with Robot() as robot:
     robot.light("blue")
@@ -66,7 +72,7 @@ with Robot() as robot:
     print(robot.see_color())
 ```
 
-`uv run boost-scan --save` remembers the hub's address in a local `.env` file (see
+`uv run hubbit-scan --save` remembers the hub's address in a local `.env` file (see
 `.env.example`; one per computer, not committed), which picks your hub when several are
 around. You still press the green button before each connection: the hub only accepts one
 while it blinks. `BOOST_LANG=de` in `.env` makes German the default.
@@ -78,7 +84,7 @@ console. Raw mode (`motor AB ...`) ignores it.
 ## Console: drive the robot by typing
 
 ```text
-$ uv run boost-console            # or: uv run boost-console --simulate  (no hub needed)
+$ uv run hubbit-console            # or: uv run hubbit-console --simulate  (no hub needed)
 robot> forward 2
 robot> turn left 90
 robot> led red
@@ -97,7 +103,7 @@ On Windows, double-click `windows\console.cmd` (or `console-practice.cmd` for th
 ## Button window: drive with the mouse and arrow keys
 
 ```bash
-uv run boost-tui                  # or: --simulate (no hub), --lang de (German)
+uv run hubbit-tui                  # or: --simulate (no hub), --lang de (German)
 ```
 
 A full-screen window on the same session as the console: big buttons for driving and the
@@ -116,7 +122,7 @@ German words always work in the console, with or without umlauts (`vor 2`, `zurÃ
 `BOOST_LANG=de`), or type `sprache deutsch` inside (`language english` switches back).
 
 ```text
-$ uv run boost-console --lang de
+$ uv run hubbit-console --lang de
 roboter> vor 2
 roboter> farbe
 Ich sehe: gruen
@@ -125,7 +131,7 @@ Ich sehe: gruen
 Die Missionen gibt es auch auf Deutsch in `kids/de/`, mit dem deutschen `Roboter`:
 
 ```python
-from lego_boost.kid import Roboter
+from hubbit.kid import Roboter
 
 with Roboter() as roboter:
     roboter.licht("blau")  # rot, gruen, gelb, lila, weiss, aus, ...
@@ -145,8 +151,8 @@ uv run ruff check .      # lint
 uv run ruff format .     # format
 ```
 
-Work is organised in [GitHub issues](https://github.com/intruder1912/lego-boost/issues);
-questions and ideas go to [Discussions](https://github.com/intruder1912/lego-boost/discussions).
+Work is organised in [GitHub issues](https://github.com/intruder1912/hubbit/issues);
+questions and ideas go to [Discussions](https://github.com/intruder1912/hubbit/discussions).
 Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 Security problems: see [SECURITY.md](SECURITY.md).
 More: [docs/workflow.md](docs/workflow.md), [docs/triage.md](docs/triage.md), [CLAUDE.md](CLAUDE.md).
@@ -156,14 +162,14 @@ More: [docs/workflow.md](docs/workflow.md), [docs/triage.md](docs/triage.md), [C
 This project stands on the work of others:
 
 - [pylgbst](https://github.com/undera/pylgbst) by Andrey Pokhilko and contributors (MIT): the
-  Python library that talks to the Move Hub. `lego_boost.hub.patch_pylgbst()` works around two
+  Python library that talks to the Move Hub. `hubbit.hub.patch_pylgbst()` works around two
   bugs in the pinned commit; see [docs/hardware-notes.md](docs/hardware-notes.md).
 - [bleak](https://github.com/hbldh/bleak) by Henrik Blidh and contributors (MIT): cross-platform
   Bluetooth LE.
 - [prompt_toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) by Jonathan Slenders
-  and contributors (BSD-3-Clause): the interactive `boost-console` prompt.
+  and contributors (BSD-3-Clause): the interactive `hubbit-console` prompt.
 - [Textual](https://github.com/Textualize/textual) by Textualize and contributors (MIT): the
-  full-screen `boost-tui` window.
+  full-screen `hubbit-tui` window.
 - [BOOSTreveng](https://github.com/JorgePe/BOOSTreveng) by Jorge Pereira (MIT) and LEGO's
   [wireless protocol documentation](https://github.com/LEGO/lego-ble-wireless-protocol-docs):
   protocol references.

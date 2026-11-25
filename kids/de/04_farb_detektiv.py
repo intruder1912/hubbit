@@ -5,7 +5,7 @@
 # Du brauchst:     den Farb- und Abstandssensor (eingesteckt).
 # Probier mal:     lass den Roboter vorwärts fahren, wenn er Grün sieht!
 
-from lego_boost.kid import Roboter
+from hubbit.kid import Roboter
 
 with Roboter() as roboter:
     print("Zeig mir eine Farbe! (Strg+C zum Aufhoeren)")

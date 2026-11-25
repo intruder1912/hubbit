@@ -20,7 +20,7 @@ If `Powered: no`: `bluetoothctl power on`. If blocked: `rfkill list` → `sudo r
 
 - **Kali:** every step above was needed (service enable, `bluetooth` group, log out/in).
   The Bluetooth service is often disabled by default — `systemctl enable --now`
-  matters. Without it `boost-scan` reports that BlueZ is not running
+  matters. Without it `hubbit-scan` reports that BlueZ is not running
   (`Unit dbus-org.bluez.service not found`). In a VM, pass the USB Bluetooth adapter through to the guest.
 - **Raspberry Pi:** the built-in adapter works (Pi 3B+ / 4 / 5 / Zero 2 W). Prefer 64-bit OS.
 
@@ -28,9 +28,9 @@ If `Powered: no`: `bluetoothctl power on`. If blocked: `rfkill list` → `sudo r
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone https://github.com/intruder1912/lego-boost.git && cd lego-boost
+git clone https://github.com/intruder1912/hubbit.git && cd hubbit
 uv sync
-uv run boost-scan
+uv run hubbit-scan
 ```
 
 Right after the hub was switched off and on again, BlueZ sometimes fails the first

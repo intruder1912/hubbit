@@ -1,13 +1,13 @@
-"""boost-tui with textual's Pilot against the simulated hub (no hardware, no real terminal)."""
+"""hubbit-tui with textual's Pilot against the simulated hub (no hardware, no real terminal)."""
 
 import asyncio
 
 import pytest
 from textual.widgets import Button, Input, RichLog
 
-from lego_boost import tui
-from lego_boost.session import CLOSED, CONNECTED, DISCONNECTED
-from lego_boost.sim import sim_robot
+from hubbit import tui
+from hubbit.session import CLOSED, CONNECTED, DISCONNECTED
+from hubbit.sim import sim_robot
 
 
 def run(test, lang="en", connect=None):

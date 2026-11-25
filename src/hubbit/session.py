@@ -18,7 +18,7 @@ Rules (see docs/superpowers/specs/2026-11-22-console-and-windows-design.md):
   link dies, the session becomes "disconnected": only `reconnect` and `exit` still work.
   A worker stuck inside pylgbst is abandoned (daemon thread) and a new one is started.
 
-SAFETY: drives motors; speeds are clamped by `lego_boost.commands` (moves <= 10 s).
+SAFETY: drives motors; speeds are clamped by `hubbit.commands` (moves <= 10 s).
 """
 
 from __future__ import annotations
@@ -29,9 +29,9 @@ import threading
 import time
 from collections.abc import Callable
 
-from lego_boost import kid
-from lego_boost.commands import BY_NAME, RAW, SIMPLE, Command, ParseError, help_text, parse
-from lego_boost.i18n import EN, color_word, lang_from_word, t
+from hubbit import kid
+from hubbit.commands import BY_NAME, RAW, SIMPLE, Command, ParseError, help_text, parse
+from hubbit.i18n import EN, color_word, lang_from_word, t
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ GRACE_SECONDS = 5.0  # extra time a command may take before the hub counts as lo
 BATTERY_EVERY = 30.0  # seconds between battery reads while polling (2 BLE round trips each)
 _POLL = 0.05
 
-# Hold-to-drive (boost-tui arrow keys). Terminals report key presses and auto-repeats, never
+# Hold-to-drive (hubbit-tui arrow keys). Terminals report key presses and auto-repeats, never
 # releases: driving continues while repeats keep coming and ends HOLD_REPEAT s after the last.
 HOLD_FIRST = 0.6  # the first press also covers the OS delay before auto-repeat starts
 HOLD_REPEAT = 0.3  # longer than the gap between two auto-repeats (~30-100 ms)
@@ -92,7 +92,7 @@ class Session:
         self.last_battery: float | None = None
         self.lang = lang  # language of messages ("en" / "de"); input accepts both
         # poll: when idle, the worker refreshes the readings below every `poll` seconds
-        # (for live displays such as boost-tui). Not a queued command: never delays one.
+        # (for live displays such as hubbit-tui). Not a queued command: never delays one.
         self._poll = poll
         self._next_battery = 0.0
         self.last_distance: float | None = None

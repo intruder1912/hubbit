@@ -7,7 +7,7 @@ Hardware: hub on. Nothing moves.
 import logging
 import time
 
-from lego_boost import boost
+from hubbit import boost
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 

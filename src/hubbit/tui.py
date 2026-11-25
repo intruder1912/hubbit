@@ -1,10 +1,10 @@
-"""boost-tui: drive the robot in a full-screen window, with buttons and arrow keys.
+"""hubbit-tui: drive the robot in a full-screen window, with buttons and arrow keys.
 
-    uv run boost-tui              # connect to the hub (press the green button)
-    uv run boost-tui --simulate   # practice without a hub
-    uv run boost-tui --lang de    # German labels and messages (or BOOST_LANG=de)
+    uv run hubbit-tui              # connect to the hub (press the green button)
+    uv run hubbit-tui --simulate   # practice without a hub
+    uv run hubbit-tui --lang de    # German labels and messages (or BOOST_LANG=de)
 
-Same session core as `boost-console` (`lego_boost.session`): the buttons and keys just
+Same session core as `hubbit-console` (`hubbit.session`): the buttons and keys just
 type commands for you, and the command line at the bottom takes every console command
 (also `raw` mode). Arrow keys drive while they are held: terminals don't report key
 releases, so the robot keeps going while auto-repeats arrive and stops ~0.3 s after the
@@ -28,10 +28,10 @@ from textual.containers import Grid, Horizontal, VerticalScroll
 from textual.message import Message
 from textual.widgets import Button, Input, RichLog, Static
 
-from lego_boost.console import _connect_hub, status_text
-from lego_boost.i18n import LANGS, color_word, default_lang, t, tilt_word
-from lego_boost.kid import Robot
-from lego_boost.session import CONNECTED, DISCONNECTED, NOT_OPEN, Session
+from hubbit.console import _connect_hub, status_text
+from hubbit.i18n import LANGS, color_word, default_lang, t, tilt_word
+from hubbit.kid import Robot
+from hubbit.session import CONNECTED, DISCONNECTED, NOT_OPEN, Session
 
 # After STOP, a still-held arrow key keeps auto-repeating; it counts as let go (and may
 # drive again) once no arrow press came for this long.
@@ -208,7 +208,7 @@ class BoostTui(App):
     def _in_background(fn: Callable[[], None]) -> None:
         """Run a connect in a daemon thread. Not a textual worker: those run in asyncio's
         executor, and quitting would wait for a connect that hangs (seen on Kali)."""
-        threading.Thread(target=fn, daemon=True, name="boost-tui connect").start()
+        threading.Thread(target=fn, daemon=True, name="hubbit-tui connect").start()
 
     def _open(self) -> None:
         try:
@@ -246,7 +246,7 @@ class BoostTui(App):
     # --- input --------------------------------------------------------------
     def run_command(self, line: str) -> None:
         """Run one console command line (buttons, keys and the command line all end here)."""
-        from lego_boost.commands import ParseError, parse
+        from hubbit.commands import ParseError, parse
 
         try:
             cmd = parse(line, self.session.mode, self.session.lang)
@@ -317,7 +317,7 @@ class BoostTui(App):
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="boost-tui",
+        prog="hubbit-tui",
         description="Drive the LEGO BOOST robot with buttons and arrow keys.",
     )
     parser.add_argument("--address", help="hub address (default: $BOOST_HUB_ADDRESS, .env or scan)")
@@ -335,7 +335,7 @@ def main(argv: list[str] | None = None) -> int:
         return app.session.lang if app is not None else args.lang
 
     if args.simulate:
-        from lego_boost.sim import sim_robot
+        from hubbit.sim import sim_robot
 
         def connect() -> Robot:
             return sim_robot(app._say, lang())

@@ -3,7 +3,7 @@
 # How to run:   uv run kids/01_hello_light.py
 # Try this:     change "red" to "blue" or "yellow", or add more colors.
 
-from lego_boost.kid import Robot
+from hubbit.kid import Robot
 
 with Robot() as robot:
     robot.light("red")

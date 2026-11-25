@@ -5,7 +5,7 @@
 # So startest du:  uv run kids/de/05_fernsteuerung.py
 # Probier mal:     nimm einen neuen Buchstaben dazu, z.B. "l" für eine Lichtshow!
 
-from lego_boost.kid import Roboter
+from hubbit.kid import Roboter
 
 with Roboter() as roboter:
     while True:

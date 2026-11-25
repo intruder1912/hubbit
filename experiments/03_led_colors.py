@@ -8,7 +8,7 @@ import time
 
 from pylgbst.peripherals import COLORS
 
-from lego_boost import boost
+from hubbit import boost
 
 with boost() as hub:
     for code, name in COLORS.items():

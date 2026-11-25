@@ -1,6 +1,6 @@
 import importlib
 
-from lego_boost.scan import MOVE_HUB_NAME, MOVE_HUB_SERVICE_UUID, is_move_hub
+from hubbit.scan import MOVE_HUB_NAME, MOVE_HUB_SERVICE_UUID, is_move_hub
 
 
 def test_matches_by_service_uuid():
@@ -20,7 +20,7 @@ def test_bluez_not_running_gives_a_hint_instead_of_a_traceback(monkeypatch, caps
     """Issue #25: Kali without the bluetooth service."""
     from bleak.exc import BleakDBusError
 
-    scan_mod = importlib.import_module("lego_boost.scan")  # the package exports a scan()
+    scan_mod = importlib.import_module("hubbit.scan")  # the package exports a scan()
 
     async def broken(timeout, first_only=False, address=None):
         raise BleakDBusError(
@@ -35,7 +35,7 @@ def test_bluez_not_running_gives_a_hint_instead_of_a_traceback(monkeypatch, caps
 
 
 def test_bluetooth_hints():
-    from lego_boost.scan import bluetooth_hint
+    from hubbit.scan import bluetooth_hint
 
     assert "switched off" in bluetooth_hint(RuntimeError("[org.bluez.Error.NotReady] Resource"))
     assert "troubleshooting" in bluetooth_hint(RuntimeError("something else"))

@@ -26,5 +26,5 @@ body:
     id: notes
     attributes:
       label: What you tried and what happened
-      description: e.g. boost-scan, experiments/02_hub_info.py, kids/01_hello_light.py
+      description: e.g. hubbit-scan, experiments/02_hub_info.py, kids/01_hello_light.py
       render: text

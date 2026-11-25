@@ -6,7 +6,7 @@ Hardware: SAFETY - lift the model or put it on a clear floor; wheels/tracks will
 
 import time
 
-from lego_boost import boost
+from hubbit import boost
 
 with boost() as hub:
     print("A: 90 degrees forward, then back")

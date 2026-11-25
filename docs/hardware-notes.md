@@ -1,5 +1,8 @@
 # Hardware notes
 
+> Entries before 2026-11-25 use the old names (`lego_boost`, `boost-scan`, `boost-console`,
+> `boost-tui`); the project is now `hubbit` (#47).
+
 ## Move Hub (88006) ports
 
 | Port | pylgbst attribute | Device |
