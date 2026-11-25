@@ -10,11 +10,10 @@ app or tablet needed. Uses [pylgbst](https://github.com/undera/pylgbst) with the
 [bleak](https://github.com/hbldh/bleak) Bluetooth LE backend, so the same code runs on
 **macOS, Linux (incl. Raspberry Pi) and Windows**.
 
-> **Renamed in 0.2.0:** this project used to be called `lego-boost` (#47). The old import
-> `lego_boost` and the old commands `boost-scan`, `boost-console`, `boost-tui` still work
-> until 0.3.0; change them to `hubbit` / `hubbit-scan` / `hubbit-console` / `hubbit-tui`.
-> An existing clone: `git remote set-url origin https://github.com/intruder1912/hubbit.git`,
-> then `uv sync`.
+> **Renamed in 0.2.0:** this project used to be called `lego-boost` (#47). Since 0.3.0 the
+> old import `lego_boost` and the old commands `boost-scan`, `boost-console`, `boost-tui` are
+> gone: use `hubbit` / `hubbit-scan` / `hubbit-console` / `hubbit-tui`. An existing clone:
+> `git remote set-url origin https://github.com/intruder1912/hubbit.git`, then `uv sync`.
 
 ## Quickstart
 

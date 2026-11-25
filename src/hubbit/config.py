@@ -6,7 +6,7 @@
 
 `load_env()` copies the values into `os.environ` unless a variable is already set there,
 so a variable set in the shell always wins. See `.env.example` for the keys.
-`LEGO_BOOST_ENV_FILE` points to another file (tests use it to ignore the real `.env`).
+`HUBBIT_ENV_FILE` points to another file (tests use it to ignore the real `.env`).
 """
 
 from __future__ import annotations
@@ -15,12 +15,12 @@ import os
 from pathlib import Path
 
 ENV_NAME = ".env"
-ENV_OVERRIDE = "LEGO_BOOST_ENV_FILE"
+ENV_OVERRIDE = "HUBBIT_ENV_FILE"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]  # src/hubbit/config.py -> repo
 
 
 def env_path() -> Path:
-    """The `.env` to use: $LEGO_BOOST_ENV_FILE, else the current folder's, else the project's."""
+    """The `.env` to use: $HUBBIT_ENV_FILE, else the current folder's, else the project's."""
     override = os.environ.get(ENV_OVERRIDE)
     if override:
         return Path(override)
