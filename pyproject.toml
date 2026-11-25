@@ -15,10 +15,6 @@ dependencies = [
 hubbit-scan = "hubbit.scan:main"
 hubbit-console = "hubbit.console:main"
 hubbit-tui = "hubbit.tui:main"
-# old names, kept for the 0.2 releases only (removed in 0.3.0)
-boost-scan = "hubbit.scan:main"
-boost-console = "hubbit.console:main"
-boost-tui = "hubbit.tui:main"
 
 [dependency-groups]
 dev = [
@@ -31,7 +27,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hubbit", "src/lego_boost"]  # lego_boost: deprecated alias, see #47
+packages = ["src/hubbit"]
 
 [tool.hatch.build.targets.sdist]
 # explicit list: never ship local files such as .env

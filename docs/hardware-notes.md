@@ -1,7 +1,7 @@
 # Hardware notes
 
 > Entries before 2026-11-25 use the old names (`lego_boost`, `boost-scan`, `boost-console`,
-> `boost-tui`); the project is now `hubbit` (#47).
+> `boost-tui`); the project is now `hubbit` (#47), and the old names were removed in 0.3.0.
 
 ## Move Hub (88006) ports
 
@@ -20,7 +20,7 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
 
 - pylgbst pinned to git commit `789a52e` (upstream `master`, 2026-11-22; until then
   `71dfc63`, 2025-01-04). PyPI 1.3.0 (2023) is broken with bleak ≥ 1.0.
-- pylgbst's scanning has no timeout → `lego_boost.scan` scans first, with a timeout.
+- pylgbst's scanning has no timeout → `hubbit.scan` scans first, with a timeout.
 - `hub.disconnect()` waits for a reply that may never come → `safe_shutdown()` uses timeouts.
 - **Fixed upstream, pinned since 2026-11-22:** at `71dfc63` macOS 12+ connects died because
   `find_device()` took no `service_uuids` kwarg (undera/pylgbst#142), and
@@ -31,7 +31,7 @@ Speeds are floats −1.0 … 1.0: `timed(seconds, speed_a, speed_b)`, `angled(de
   session reports it as one "oops" line.
 - **One pending request at a time:** `hub.send()` asserts there is no outstanding sync
   request. Two threads sending commands (e.g. `motor.stop()` from the UI thread while another
-  thread waits in `timed()`) raise `AssertionError`. `lego_boost.session` therefore sends
+  thread waits in `timed()`) raise `AssertionError`. `hubbit.session` therefore sends
   everything from one worker thread and starts moves with `wait_complete=False`.
 - **Lost link detection:** `BleakConnection.is_alive()` is a no-op; use
   `hub.connection.is_alive()` (the `BleakDriver`, checks pylgbst's two threads). It only turns
