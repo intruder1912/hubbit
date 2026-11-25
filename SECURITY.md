@@ -3,7 +3,8 @@
 ## Supported versions
 
 Only the latest release and `main` are supported. Release files carry a build provenance
-attestation (`gh attestation verify <file> --repo intruder1912/hubbit`).
+attestation (`gh attestation verify <file> --repo intruder1912/hubbit`; for v0.1.x use
+`--repo intruder1912/lego-boost`, the old name).
 
 ## Reporting a vulnerability
 
